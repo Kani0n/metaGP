@@ -1,0 +1,5 @@
+.git
+.nextflow*
+work/
+src/__pycache__/
+config/
