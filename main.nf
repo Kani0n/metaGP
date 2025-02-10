@@ -1,5 +1,23 @@
 #!/usr/bin/env nextflow
 
+process make_mapping_file {
+
+    conda "/mnt/DATA/miniconda3/envs/metaGP"
+
+    publishDir 'mapping', mode: 'copy'
+
+    input:
+        val input_dir
+    
+    output:
+        path "mapping.tab"
+
+    script:
+    """
+    python3 ${projectDir}/src/metaGP.py --mapping -d \$PWD -i ${input_dir} > mapping.tab
+    """
+}
+
 process make_config_file {
 
     conda "/mnt/DATA/miniconda3/envs/metaGP"
@@ -10,11 +28,11 @@ process make_config_file {
         val input_dir
     
     output:
-        path "out.txt"
+        path "config.info"
 
     script:
     """
-    python3 ${projectDir}/src/metaGP.py -d \$PWD -i ${input_dir} > out.txt
+    python3 ${projectDir}/src/metaGP.py --config -d \$PWD -i ${input_dir} > config.info
     """
 }
 
@@ -102,6 +120,7 @@ workflow {
 
     input_ch = Channel.of(params.i)
 
+    make_mapping_file(input_ch)
     make_config_file(input_ch)
     
 }
