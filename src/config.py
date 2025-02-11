@@ -97,3 +97,12 @@ def print_config(config):
             print('{} = {}'.format(option,val))
             configstr += '{} = {}\n'.format(option,val)
     return configstr
+
+
+#------------------------------------------------------------------------------------
+# Print config file
+#------------------------------------------------------------------------------------
+def read_config(project_dir):
+    config = configparser.ConfigParser()
+    config.read(os.path.join(project_dir, 'config', 'config.info'))
+    return config

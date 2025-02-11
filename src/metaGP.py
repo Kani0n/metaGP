@@ -1,8 +1,9 @@
 #!/user/bin/env python3
 
 import argparse as ap
+import pandas as pd
 
-import mapping, config
+import mapping, config, pre_execution
 
 parser = ap.ArgumentParser()
 parser.add_argument('--mapping', dest='mapping_exec', action='store_true', default=False, 
@@ -19,9 +20,11 @@ parser.add_argument('--div', dest='div_exec', action='store_true', default=False
                     help='Option for performing diversity analysis.')
 parser.add_argument('--func', dest='func_exec', action='store_true', default=False, 
                     help='Option for performing functional analysis.')
-parser.add_argument('-d', '--dir', dest='process_dir', type=str, required=True, 
+parser.add_argument('-d', '--dir', dest='project_dir', type=str,
+                    help='Project directory.')
+parser.add_argument('-p', '--p-dir', dest='process_dir', type=str,
                     help='Prcess directory.')
-parser.add_argument('-i', '--indir', dest='input_dir', type=str, required=True, 
+parser.add_argument('-i', '--indir', dest='input_dir', type=str,
                     help='Input directory.')
 args = parser.parse_args()
 
@@ -32,15 +35,18 @@ QC = args.qc_exec
 TAXO = args.taxo_exec
 DIV = args.div_exec
 FUNC = args.func_exec
+project_dir = args.project_dir
 process_dir = args.process_dir
 input_dir = args.input_dir
+
+pd.set_option('display.max_colwidth', None)
 
 if MAPPING:
     mapping.make_mapping(process_dir, input_dir)
 elif CONFIG:
     config.make_config(input_dir)
 elif PRE:
-    pass
+    pre_execution.run_pre_processing(project_dir, process_dir)
 elif QC:
     pass
 elif TAXO:

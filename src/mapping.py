@@ -69,5 +69,12 @@ def create_mapping_file(process_dir, input_dir):
 #------------------------------------------------------------------------------------
 def make_mapping(process_dir, input_dir):
     mapping_file = create_mapping_file(process_dir, input_dir)
-    pd.set_option('display.max_colwidth', None)
-    print(mapping_file.to_string(index=False))
+    mapping_file.to_csv(os.path.join(process_dir, 'mapping.tab'), sep='\t', index=False)
+    #print(mapping_file.to_string(index=False))
+
+
+#------------------------------------------------------------------------------------
+# Reading mapping file
+#------------------------------------------------------------------------------------
+def read_mapping(project_dir):
+    return pd.read_csv(os.path.join(project_dir, 'mapping', 'mapping.tab'), sep='\t', header=0, index_col=False)

@@ -14,7 +14,7 @@ process make_mapping_file {
 
     script:
     """
-    python3 ${projectDir}/src/metaGP.py --mapping -d \$PWD -i ${input_dir} > mapping.tab
+    python3 ${projectDir}/src/metaGP.py --mapping -p \$PWD -i ${input_dir}
     """
 }
 
@@ -32,23 +32,23 @@ process make_config_file {
 
     script:
     """
-    python3 ${projectDir}/src/metaGP.py --config -d \$PWD -i ${input_dir} > config.info
+    python3 ${projectDir}/src/metaGP.py --config -i ${input_dir} > config.info
     """
 }
 
 process preprocessing {
 
-    publishDir 'out', mode: 'copy'
+    publishDir 'pre', mode: 'copy'
 
     input:
-        val input_dir
+        path mapping
 
     output:
-        
+        path "pre.txt"
 
     script:
     """
-    
+    python3 ${projectDir}/src/metaGP.py --pre -d ${projectDir} -p \$PWD > pre.txt
     """
 }
 
@@ -122,5 +122,5 @@ workflow {
 
     make_mapping_file(input_ch)
     make_config_file(input_ch)
-    
+    preprocessing(make_mapping_file.out)
 }
