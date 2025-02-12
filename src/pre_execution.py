@@ -12,8 +12,10 @@ import util, mapping
 #------------------------------------------------------------------------------------
 def call_fastqc(list_files, process_dir):
     input_files = ' '.join(list_files)
-    output_dir = os.path.join(process_dir, '1_quality_control', '1.0_rawdata')
-    cmd_fastqc = 'fastqc --quiet --outdir ' + output_dir + ' ' + input_files
+    output_dir = os.path.join(process_dir, 'fastqc')
+    util.create_dir(output_dir)
+    cmd_fastqc = 'fastqc --quiet -o ' + output_dir + ' ' + input_files
+    print(cmd_fastqc)
     os.system(cmd_fastqc)
     #logging.info('FastQC reports: ' + output_dir)
 
@@ -26,7 +28,9 @@ def count_distribution(sample, fwd, rev, process_dir):
     rd_count = util.count_reads([fwd, rev])
     df = pd.DataFrame([sample] + rd_count).T
     df.columns = ['SampleID', 'Raw_F', 'Raw_F.Count', 'Raw_R', 'Raw_R.Count']
-    df.to_csv(os.path.join(process_dir, sample + '.stat'), sep='\t', index=False)
+    output_dir = os.path.join(process_dir, 'stats')
+    util.create_dir(output_dir)
+    df.to_csv(os.path.join(output_dir, sample + '.stat'), sep='\t', index=False)
 
 
 #------------------------------------------------------------------------------------
@@ -58,4 +62,4 @@ def run_pre_processing(project_dir, process_dir):
     print(result)
     exit()
     # pre-execution report
-    p = qcheck_stats(config_file, qc=False)
+    p = util.qcheck_stats(config_file, qc=False)

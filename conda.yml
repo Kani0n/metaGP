@@ -9,6 +9,8 @@ dependencies:
   - configparser
   - bowtie2
   - fastqc
+  - cutadapt
+  - trimmomatic
   - samtools
   - ucsc-bedsort
   - ucsc-bedgraphtobigwig

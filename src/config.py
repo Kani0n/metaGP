@@ -100,9 +100,16 @@ def print_config(config):
 
 
 #------------------------------------------------------------------------------------
-# Print config file
+# Get config file
 #------------------------------------------------------------------------------------
 def read_config(project_dir):
     config = configparser.ConfigParser()
     config.read(os.path.join(project_dir, 'config', 'config.info'))
     return config
+
+
+#------------------------------------------------------------------------------------
+# Read config file
+#------------------------------------------------------------------------------------
+def read_from_config(config, section, item):
+    return config.get(section, item)

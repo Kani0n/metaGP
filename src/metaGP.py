@@ -3,7 +3,7 @@
 import argparse as ap
 import pandas as pd
 
-import mapping, config, pre_execution
+import mapping, config, pre_execution, quality_control
 
 parser = ap.ArgumentParser()
 parser.add_argument('--mapping', dest='mapping_exec', action='store_true', default=False, 
@@ -48,7 +48,7 @@ elif CONFIG:
 elif PRE:
     pre_execution.run_pre_processing(project_dir, process_dir)
 elif QC:
-    pass
+    quality_control.run_quality_control(project_dir, process_dir)
 elif TAXO:
     pass
 elif DIV:

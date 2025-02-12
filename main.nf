@@ -44,27 +44,30 @@ process preprocessing {
         path mapping
 
     output:
-        path "pre.txt"
+        path 'stats'
+        path 'fastqc'
 
     script:
     """
-    python3 ${projectDir}/src/metaGP.py --pre -d ${projectDir} -p \$PWD > pre.txt
+    python3 ${projectDir}/src/metaGP.py --pre -d ${projectDir} -p \$PWD
     """
 }
 
 process quality_control {
 
-    publishDir 'out', mode: 'copy'
+    publishDir 'qc', mode: 'copy'
 
     input:
-        
+        path mapping
+        path config
+        path preprocessing
 
     output:
         
 
     script:
     """
-    
+    python3 ${projectDir}/src/metaGP.py --qc -d ${projectDir} -p \$PWD
     """
 }
 
@@ -123,4 +126,5 @@ workflow {
     make_mapping_file(input_ch)
     make_config_file(input_ch)
     preprocessing(make_mapping_file.out)
+    quality_control(make_mapping_file.out, make_config_file.out, preprocessing.out)
 }
