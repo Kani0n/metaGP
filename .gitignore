@@ -5,3 +5,5 @@ src/__pycache__/
 config/
 mapping/
 pre/
+qc/
+static/

@@ -7,14 +7,18 @@ dependencies:
   - python=3.8
   - pandas
   - configparser
-  - bowtie2
   - fastqc
   - cutadapt
+  - kneaddata
+  - bowtie2
   - trimmomatic
-  - samtools
-  - ucsc-bedsort
-  - ucsc-bedgraphtobigwig
-  - bedtools
-  - deeptools
-  - homer
-  - seacr
+  - trf
+  - seaborn
+  - metaphlan
+#  - samtools
+#  - ucsc-bedsort
+#  - ucsc-bedgraphtobigwig
+#  - bedtools
+#  - deeptools
+#  - homer
+#  - seacr

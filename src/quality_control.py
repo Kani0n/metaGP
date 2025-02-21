@@ -39,57 +39,60 @@ def call_cutadapt(fwd, rev, output_dir, config_file):
     rev_adapter = adap[1]
     minlength = str(config.read_from_config(config_file, 'QA', 'minlength'))
 
-    cmd = 'cutadapt -a ' + fwd_adapter + ' -A ' + rev_adapter + ' --cores=8 -m ' + minlength + ' -o ' + out_fwd_file + ' -p ' + out_rev_file + ' ' + fwd + ' ' + rev
+    cmd = 'cutadapt --quiet -a ' + fwd_adapter + ' -A ' + rev_adapter + ' --cores=8 -m ' + minlength + ' -o ' + out_fwd_file + ' -p ' + out_rev_file + ' ' + fwd + ' ' + rev
     os.system(cmd)
+    return out_fwd_file, out_rev_file
 
 
 # Execute Kneaddata
-def call_kneaddata(fwd_file, rev_file, output_dir, config_file, bypass_trf):
-    refdb = [os.path.join(config.read_from_config(config_file,'QA','host_db'), 'human/human_hg38'), 
-             os.path.join(config.read_from_config(config_file,'QA','host_db'), 'mouse/mouse_C57BL_6NJ')]
-    adapter = config.read_from_config(config_file,'QA','adapter')
-    headcrop = config.read_from_config(config_file,'QA','headcrop')
+def call_kneaddata(fwd, rev, output_dir, config_file, bypass_trf):
+    util.create_dir(output_dir)
 
-    cmd = 'kneaddata --input1 ' + fwd_file + ' --input2 ' + rev_file + ' -db ' + ' -db '.join(refdb) + ' --output ' + output_dir 
-    cmd+= ' --trimmomatic tools/Trimmomatic-0.39'
-    cmd+= ' --trimmomatic-options="ILLUMINACLIP:'+adapter+':2:30:10"' + ' --trimmomatic-options="HEADCROP:'+str(headcrop)+'" --trimmomatic-options="LEADING:20"'
+    refdb = [os.path.join(config.read_from_config(config_file, 'QA', 'host_db'), 'human/human_hg37dec_v0.1'), 
+             os.path.join(config.read_from_config(config_file,'QA', 'host_db'), 'mouse/mouse_C57BL_6NJ')]
+    adapter = config.read_from_config(config_file, 'QA', 'adapter')
+    headcrop = config.read_from_config(config_file, 'QA', 'headcrop')
+
+    cmd = 'kneaddata --input ' + fwd + ' --input ' + rev + ' -db ' + ' -db '.join(refdb) + ' --output ' + output_dir 
+    cmd += ' --trimmomatic /mnt/DATA/miniconda3/envs/metaGP/share/trimmomatic-0.39-2/'
+    cmd += ' --trimmomatic-options="ILLUMINACLIP:' + adapter + ':2:30:10"' + ' --trimmomatic-options="HEADCROP:' + str(headcrop) + '" --trimmomatic-options="LEADING:20"'
     if bypass_trf:
-        cmd+= ' --bypass-trf'  
+        cmd += ' --bypass-trf'  
     else:  
-        cmd+= ' --run-trim-repetitive --trf tools/TRF-4.09'
-    cmd+= ' --fastqc tools/fastqc_v0.11.9/FastQC/fastqc'
-    cmd+= ' --bowtie2 tools/bowtie2'
-    cmd+= ' --bowtie2-options="--quiet" --bowtie2-options="--threads 24" --processes 16 --threads 2'
+        cmd += ' --run-trim-repetitive --trf /mnt/DATA/miniconda3/envs/metaGP/bin/'
+    cmd += ' --fastqc /mnt/DATA/miniconda3/envs/metaGP/bin/fastqc'
+    cmd += ' --bowtie2 /mnt/DATA/miniconda3/envs/metaGP/bin/'
+    cmd += ' --bowtie2-options="--quiet" --bowtie2-options="--threads 24" --processes 16 --threads 2'
     os.system(cmd)
 
-    fwd_filename = os.path.split(fwd_file)[-1]
+    fwd_filename = os.path.split(fwd)[-1]
+    rev_filename = os.path.split(rev)[-1]
 
-    rev_filename = os.path.split(rev_file)[-1].replace('.fq.gz','')
-    out_fwd_file = os.path.join(output_dir,fwd_filename.replace('.fq.gz','_kneaddata_paired_1.fastq'))
-    out_rev_file = os.path.join(output_dir,fwd_filename.replace('.fq.gz','_kneaddata_paired_2.fastq'))
-    util.call_fastqc([out_fwd_file,out_rev_file],os.path.join(output_dir,'fastqc_kneaddata'))
+    out_fwd_file = os.path.join(output_dir, fwd_filename.replace('.fq.gz', '_kneaddata_paired_1.fastq'))
+    out_rev_file = os.path.join(output_dir, fwd_filename.replace('.fq.gz', '_kneaddata_paired_2.fastq'))
+    util.call_fastqc([out_fwd_file, out_rev_file], os.path.join(output_dir, 'fastqc_kneaddata'))
 
     # count reads for files
     # no of repeat reads
-    repeat_fwd = os.path.join(output_dir,fwd_filename.replace('.fq.gz', '_kneaddata.repeats.removed.1.fastq'))
-    repeat_rev = os.path.join(output_dir,fwd_filename.replace('.fq.gz', '_kneaddata.repeats.removed.2.fastq'))
+    repeat_fwd = os.path.join(output_dir, fwd_filename.replace('.fq.gz', '_kneaddata.repeats.removed.1.fastq'))
+    repeat_rev = os.path.join(output_dir, fwd_filename.replace('.fq.gz', '_kneaddata.repeats.removed.2.fastq'))
     if bypass_trf:
        fp = open(repeat_fwd,'w')
        fp = open(repeat_rev,'w')
     # no of trimmed reads
-    trim_fwd = os.path.join(output_dir,fwd_filename.replace('.fq.gz', '_kneaddata.trimmed.1.fastq'))
-    trim_rev = os.path.join(output_dir,fwd_filename.replace('.fq.gz', '_kneaddata.trimmed.2.fastq'))
+    trim_fwd = os.path.join(output_dir, fwd_filename.replace('.fq.gz', '_kneaddata.trimmed.1.fastq'))
+    trim_rev = os.path.join(output_dir, fwd_filename.replace('.fq.gz', '_kneaddata.trimmed.2.fastq'))
     for host in refdb:
         hostname = os.path.basename(host)
-        # no of contaminated reads (human)
+        # num of contaminated reads (human)
         if 'human' in host:
-            human_contam_fwd = os.path.join(output_dir,fwd_filename.replace('.fq.gz', '_kneaddata_'+hostname+'_bowtie2_paired_contam_1.fastq'))
-            human_contam_rev = os.path.join(output_dir,fwd_filename.replace('.fq.gz', '_kneaddata_'+hostname+'_bowtie2_paired_contam_2.fastq'))
-        # no of contaminated reads (mouse)
+            human_contam_fwd = os.path.join(output_dir, fwd_filename.replace('.fq.gz', '_kneaddata_' + hostname + '_bowtie2_paired_contam_1.fastq'))
+            human_contam_rev = os.path.join(output_dir, fwd_filename.replace('.fq.gz', '_kneaddata_' + hostname + '_bowtie2_paired_contam_2.fastq'))
+        # num of contaminated reads (mouse)
         elif 'mouse' in host:
-            mouse_contam_fwd = os.path.join(output_dir,fwd_filename.replace('.fq.gz', '_kneaddata_'+hostname+'_bowtie2_paired_contam_1.fastq'))
-            mouse_contam_rev = os.path.join(output_dir,fwd_filename.replace('.fq.gz', '_kneaddata_'+hostname+'_bowtie2_paired_contam_2.fastq'))    
-    return  repeat_fwd, repeat_rev, trim_fwd, trim_rev, human_contam_fwd, human_contam_rev, mouse_contam_fwd, mouse_contam_rev, out_fwd_file, out_rev_file
+            mouse_contam_fwd = os.path.join(output_dir, fwd_filename.replace('.fq.gz', '_kneaddata_' + hostname + '_bowtie2_paired_contam_1.fastq'))
+            mouse_contam_rev = os.path.join(output_dir, fwd_filename.replace('.fq.gz', '_kneaddata_' + hostname + '_bowtie2_paired_contam_2.fastq'))
+    return  [repeat_fwd, repeat_rev, trim_fwd, trim_rev, human_contam_fwd, human_contam_rev, mouse_contam_fwd, mouse_contam_rev, out_fwd_file, out_rev_file]
 
 
 def quality_control_parallel(item):
@@ -106,31 +109,34 @@ def quality_control_parallel(item):
     
     # call cutadapt
     outdir = os.path.join(process_dir,'adapter_trimming')
-    call_cutadapt(fwd, rev, outdir, config_file)
+    fwd, rev = call_cutadapt(fwd, rev, outdir, config_file)
     rd_count = util.count_reads([fwd, rev])
     sample_report.extend(rd_count)
 
     # call kneaddata
     outdir = os.path.join(process_dir,'decontamination')
-    
-    repeat_fwd, repeat_rev, trim_fwd, trim_rev, human_contam_fwd, human_contam_rev, mouse_contam_fwd, mouse_contam_rev, fwd, rev_file = call_kneaddata(fwd,rev,outdir,config_file,bypass_trf)
-    rd_count = util.count_reads([repeat_fwd, repeat_rev, trim_fwd, trim_rev, human_contam_fwd, human_contam_rev, mouse_contam_fwd, mouse_contam_rev, fwd, rev])
+    #repeat_fwd, repeat_rev, trim_fwd, trim_rev, human_contam_fwd, human_contam_rev, mouse_contam_fwd, mouse_contam_rev, fwd, rev = call_kneaddata(fwd, rev, outdir, config_file, bypass_trf = True)
+    result = call_kneaddata(fwd, rev, outdir, config_file, bypass_trf = True)
+    rd_count = util.count_reads(result)
     sample_report.extend(rd_count)
+
     # Compute number of trimmed reads
-    sample_report[14]=(sample_report[2]-sample_report[6])+(sample_report[2]-sample_report[14])
-    sample_report[16]=(sample_report[2]-sample_report[8])+(sample_report[2]-sample_report[16])
+    sample_report[14] = (sample_report[2] - sample_report[6]) + (sample_report[2] - sample_report[14])
+    sample_report[16] = (sample_report[2] - sample_report[8]) + (sample_report[2] - sample_report[16])
     report.append(sample_report)
 
-    columns = ['SampleID', 'Raw_F', 'Raw_F.Count', 'Raw_R', 'Raw_R.Count', 
-               'Cutadapt_F', 'Cutadapt_F.Count', 'Cutadapt_R', 'Cutadapt_R.Count', 
-               'Repeat_F','Repeat_F.Count','Repeat_R','Repeat_R.Count',
-               'Trim_F', 'Trim_F.Count','Trim_R','Trim_R.Count',
-               'Human_Contam_F','Human_Contam_F.Count','Human_Contam_R','Human_Contam_R.Count',
-               'Mouse_Contam_F','Mouse_Contam_F.Count','Mouse_Contam_R','Mouse_Contam_R.Count',
-               'Kneaddata_F', 'Kneaddata_F.Count', 'Kneaddata_R', 'Kneaddata_R.Count']
-    df = pd.DataFrame(report, columns = columns)
-    df.to_csv(os.path.join(output_basedir,'1_quality_control',sample+'.stat'), sep='\t',index=False)
-    logging.info('\nTable of read counts: '+os.path.join(output_basedir,'1_quality_control',sample+'_stats.tab'))
+    cols = ['SampleID', 'Raw_F', 'Raw_F.Count', 'Raw_R', 'Raw_R.Count', 
+            'Cutadapt_F', 'Cutadapt_F.Count', 'Cutadapt_R', 'Cutadapt_R.Count', 
+            'Repeat_F','Repeat_F.Count','Repeat_R','Repeat_R.Count',
+            'Trim_F', 'Trim_F.Count','Trim_R','Trim_R.Count',
+            'Human_Contam_F','Human_Contam_F.Count','Human_Contam_R','Human_Contam_R.Count',
+            'Mouse_Contam_F','Mouse_Contam_F.Count','Mouse_Contam_R','Mouse_Contam_R.Count',
+            'Kneaddata_F', 'Kneaddata_F.Count', 'Kneaddata_R', 'Kneaddata_R.Count']
+    df = pd.DataFrame(report, columns=cols)
+
+    outdir = os.path.join(process_dir, 'stats')
+    util.create_dir(outdir)
+    df.to_csv(os.path.join(outdir, sample + '.stat'), sep='\t', index=False)
     
 
 def run_quality_control(project_dir, process_dir):
@@ -150,4 +156,4 @@ def run_quality_control(project_dir, process_dir):
     print(result)
     exit()
     # quality_control report
-    p = util.qcheck_stats(config_file, qc=True)
+    util.qcheck_stats(project_dir, process_dir, qc=True)

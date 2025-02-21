@@ -3,7 +3,7 @@
 import argparse as ap
 import pandas as pd
 
-import mapping, config, pre_execution, quality_control
+import mapping, config, pre_execution, quality_control, taxonomy_profiling
 
 parser = ap.ArgumentParser()
 parser.add_argument('--mapping', dest='mapping_exec', action='store_true', default=False, 
@@ -44,13 +44,13 @@ pd.set_option('display.max_colwidth', None)
 if MAPPING:
     mapping.make_mapping(process_dir, input_dir)
 elif CONFIG:
-    config.make_config(input_dir)
+    config.make_config(project_dir, input_dir)
 elif PRE:
     pre_execution.run_pre_processing(project_dir, process_dir)
 elif QC:
     quality_control.run_quality_control(project_dir, process_dir)
 elif TAXO:
-    pass
+    taxonomy_profiling.run_taxonomy_profiling(project_dir, process_dir)
 elif DIV:
     pass
 elif FUNC:

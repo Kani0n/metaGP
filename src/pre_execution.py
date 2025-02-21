@@ -60,6 +60,5 @@ def run_pre_processing(project_dir, process_dir):
     # parallel execution of pre-execution
     result = pool.map(pre_process_parallel, item)
     print(result)
-    exit()
     # pre-execution report
-    p = util.qcheck_stats(config_file, qc=False)
+    util.qcheck_stats(project_dir, process_dir, qc=False)

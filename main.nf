@@ -32,7 +32,7 @@ process make_config_file {
 
     script:
     """
-    python3 ${projectDir}/src/metaGP.py --config -i ${input_dir} > config.info
+    python3 ${projectDir}/src/metaGP.py --config -d ${projectDir} -i ${input_dir} > config.info
     """
 }
 
@@ -44,8 +44,7 @@ process preprocessing {
         path mapping
 
     output:
-        path 'stats'
-        path 'fastqc'
+        tuple path('stats'), path('fastqc')
 
     script:
     """
@@ -63,7 +62,7 @@ process quality_control {
         path preprocessing
 
     output:
-        
+        tuple path('remove_blankspace'), path('adapter_trimming'), path('decontamination'), path('stats')
 
     script:
     """
@@ -73,17 +72,17 @@ process quality_control {
 
 process taxonomy_profiling {
 
-    publishDir 'out', mode: 'copy'
+    publishDir 'tax', mode: 'copy'
 
     input:
-        
+        path quality_control
 
     output:
         
 
     script:
     """
-    
+    python3 ${projectDir}/src/metaGP.py --taxo -d ${projectDir} -p \$PWD
     """
 }
 
