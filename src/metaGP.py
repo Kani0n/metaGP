@@ -3,7 +3,7 @@
 import argparse as ap
 import pandas as pd
 
-import mapping, config, pre_execution, quality_control, taxonomy_profiling
+import mapping, config, pre_execution, quality_control, taxonomy_profiling, diversity_execution, functional_profiling
 
 parser = ap.ArgumentParser()
 parser.add_argument('--mapping', dest='mapping_exec', action='store_true', default=False, 
@@ -52,6 +52,6 @@ elif QC:
 elif TAXO:
     taxonomy_profiling.run_taxonomy_profiling(project_dir, process_dir)
 elif DIV:
-    pass
+    diversity_execution.run_diversity_execution(project_dir, process_dir)
 elif FUNC:
-    pass
+    functional_profiling.run_functional_profiling(project_dir, process_dir)

@@ -59,7 +59,6 @@ process quality_control {
     input:
         path mapping
         path config
-        path preprocessing
 
     output:
         tuple path('remove_blankspace'), path('adapter_trimming'), path('decontamination'), path('stats')
@@ -72,13 +71,13 @@ process quality_control {
 
 process taxonomy_profiling {
 
-    publishDir 'tax', mode: 'copy'
+    publishDir 'taxo', mode: 'copy'
 
     input:
-        path quality_control
+        path qc
 
     output:
-        
+        tuple path('taxonomic_profile'), path('Taxonomic_binning')
 
     script:
     """
@@ -88,33 +87,33 @@ process taxonomy_profiling {
 
 process diversity_computation {
 
-    publishDir 'out', mode: 'copy'
+    publishDir 'div', mode: 'copy'
 
     input:
-        
+        path taxo
 
     output:
-        
+        path 'diversity'
 
     script:
     """
-    
+    python3 ${projectDir}/src/metaGP.py --div -d ${projectDir} -p \$PWD
     """
 }
 
 process functional_profiling {
 
-    publishDir 'out', mode: 'copy'
+    publishDir 'func', mode: 'copy'
 
     input:
-        
+        path qc
 
     output:
-        
+        path 'functional_profile'
 
     script:
     """
-    
+    python3 ${projectDir}/src/metaGP.py --func -d ${projectDir} -p \$PWD
     """
 }
 
@@ -125,5 +124,8 @@ workflow {
     make_mapping_file(input_ch)
     make_config_file(input_ch)
     preprocessing(make_mapping_file.out)
-    quality_control(make_mapping_file.out, make_config_file.out, preprocessing.out)
+    quality_control(make_mapping_file.out, make_config_file.out)
+    taxonomy_profiling(quality_control.out)
+    diversity_computation(taxonomy_profiling.out)
+    functional_profiling(quality_control.out)
 }

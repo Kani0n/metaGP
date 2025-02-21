@@ -5,6 +5,7 @@ import multiprocessing as mp
 import pandas as pd
 
 import util, mapping
+import quality_control_stats as stats
 
 
 #------------------------------------------------------------------------------------
@@ -61,4 +62,4 @@ def run_pre_processing(project_dir, process_dir):
     result = pool.map(pre_process_parallel, item)
     print(result)
     # pre-execution report
-    util.qcheck_stats(project_dir, process_dir, qc=False)
+    stats.qcheck_stats(project_dir, process_dir, qc=False)

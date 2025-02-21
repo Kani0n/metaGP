@@ -5,6 +5,7 @@ import multiprocessing as mp
 import pandas as pd
 
 import util, mapping, config
+import quality_control_stats as stats
 
 
 def remove_blankspace(fwd, rev, output_dir):
@@ -156,4 +157,4 @@ def run_quality_control(project_dir, process_dir):
     print(result)
     exit()
     # quality_control report
-    util.qcheck_stats(project_dir, process_dir, qc=True)
+    stats.qcheck_stats(project_dir, process_dir, qc=True)

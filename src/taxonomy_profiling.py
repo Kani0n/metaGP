@@ -4,7 +4,8 @@ import pandas as pd
 import os
 import multiprocessing as mp
 
-import config, util
+import util, config
+import taxonomy_profiling_stats as stats
 
 
 def exec_metaphlan(sample, fwd, rev, config_file, process_dir, category, del_bowtieout):
@@ -39,7 +40,7 @@ def exec_metaphlan(sample, fwd, rev, config_file, process_dir, category, del_bow
         os.remove(bowtieout)
 
 
-def taxo_execution(item):
+def taxonomy_profiling_parallel(item):
     sample, fwd, rev, config_file, process_dir = item
     output_dir = os.path.join(process_dir, 'taxonomic_profile')
     util.create_dir(output_dir)
@@ -59,8 +60,8 @@ def run_taxonomy_profiling(project_dir, process_dir):
         item.append([sample, fwd, rev, config_file, process_dir])
     pool = mp.Pool(min(int(mp.cpu_count()/2), len(item)))
     # parallel execution of taxonomy_profiling
-    result = pool.map(taxo_execution, item)
+    result = pool.map(taxonomy_profiling_parallel, item)
     print(result)
     exit()
     # taxonomy_profiling report
-    taxoprof_stats(config_file)
+    stats.taxoprof_stats(config_file, project_dir, process_dir)
