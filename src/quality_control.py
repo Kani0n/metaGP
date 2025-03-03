@@ -54,15 +54,15 @@ def call_kneaddata(fwd, rev, output_dir, config_file, bypass_trf):
     adapter = config.read_from_config(config_file, 'QA', 'adapter')
     headcrop = config.read_from_config(config_file, 'QA', 'headcrop')
 
-    cmd = 'kneaddata --input ' + fwd + ' --input ' + rev + ' -db ' + ' -db '.join(refdb) + ' --output ' + output_dir 
-    cmd += ' --trimmomatic /mnt/DATA/miniconda3/envs/metaGP/share/trimmomatic-0.39-2/'
+    cmd = 'kneaddata --input1 ' + fwd + ' --input2 ' + rev + ' -db ' + ' -db '.join(refdb) + ' --output ' + output_dir 
+    cmd += ' --trimmomatic /mnt/main_hdd/miniconda3/envs/metaGP/share/trimmomatic-0.39-2/'
     cmd += ' --trimmomatic-options="ILLUMINACLIP:' + adapter + ':2:30:10"' + ' --trimmomatic-options="HEADCROP:' + str(headcrop) + '" --trimmomatic-options="LEADING:20"'
     if bypass_trf:
         cmd += ' --bypass-trf'  
     else:  
-        cmd += ' --run-trim-repetitive --trf /mnt/DATA/miniconda3/envs/metaGP/bin/'
-    cmd += ' --fastqc /mnt/DATA/miniconda3/envs/metaGP/bin/fastqc'
-    cmd += ' --bowtie2 /mnt/DATA/miniconda3/envs/metaGP/bin/'
+        cmd += ' --run-trim-repetitive --trf /mnt/main_hdd/miniconda3/envs/metaGP/bin/'
+    cmd += ' --fastqc /mnt/main_hdd/miniconda3/envs/metaGP/bin/fastqc'
+    cmd += ' --bowtie2 /mnt/main_hdd/miniconda3/envs/metaGP/bin/'
     cmd += ' --bowtie2-options="--quiet" --bowtie2-options="--threads 24" --processes 16 --threads 2'
     os.system(cmd)
 
@@ -155,6 +155,5 @@ def run_quality_control(project_dir, process_dir):
 
     result = pool.map(quality_control_parallel, item)
     print(result)
-    exit()
     # quality_control report
-    stats.qcheck_stats(project_dir, process_dir, qc=True)
+    stats.qcheck_stats(project_dir, process_dir)

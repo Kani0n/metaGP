@@ -15,7 +15,7 @@ dependencies:
   - trf
   - seaborn
   - metaphlan
-  - skbio
+  - scikit-bio
   - statannotations
 #  - samtools
 #  - ucsc-bedsort

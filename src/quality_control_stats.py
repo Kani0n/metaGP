@@ -3,48 +3,20 @@
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
 
 import util, config
 
 
 #------------------------------------------------------------------------------------
-# Merge the statistic files of RAW DATA. The statistic files endswith '.stat' 
-#------------------------------------------------------------------------------------
-def merge_raw_stats(dir):
-    frames = []
-    count = 0
-    for f in os.listdir(dir):
-        if f.endswith('.stat'):
-            filename = os.path.join(dir, f)
-            frames.append(pd.read_csv(filename, sep='\t'))
-            count += 1
-    result = pd.concat(frames, ignore_index=True)
-    result['Raw.Count'] = result[['Raw_F.Count', 'Raw_R.Count']].sum(axis=1)
-    result = result.sort_values(by=['Raw.Count'], ascending=False)
-    result['num'] = list(range(1, count + 1))
-    cols = ['num', 'SampleID', 'Raw.Count']
-    result = result[cols]
-    outfile = os.path.join(dir,'raw_readcount.tab')
-    result.to_csv(outfile, sep='\t', index=False, header=True)
-
-    fig, axs = plt.subplots(1, 1, figsize=(10, 5), tight_layout=True)
-    sns.barplot(data=result, x='SampleID', y='Raw.Count', color='#2F70B3')
-    plt.xticks(rotation=90)
-    axs.set_ylabel('Raw read count')
-    plt.savefig(os.path.join(dir,'raw_readcount.png'))
-
-
-#------------------------------------------------------------------------------------
 # Merge the statistic files. The statistic files endswith '.stat' 
 #------------------------------------------------------------------------------------
-def merge_stats(dir, min_readcount):
+def merge_stats(stats_dir, output_dir, min_readcount):
     frames = []
     count = 0
-    for f in os.listdir(dir):
+    for f in os.listdir(stats_dir):
         if f.endswith('.stat'):
-            filename = os.path.join(dir, f)
+            filename = os.path.join(stats_dir, f)
             frames.append(pd.read_csv(filename, sep='\t'))
             count += 1
     result = pd.concat(frames)
@@ -72,14 +44,14 @@ def merge_stats(dir, min_readcount):
     result = result[cols]
     result['Keep'] = np.where(result['Final.Count'] >= min_readcount, True, False)
     result = result.sort_values('Final.Count', ascending=False)
-    outfile = os.path.join(dir, 'readcounts.tab')
+    outfile = os.path.join(output_dir, 'readcounts.tab')
     result.to_csv(outfile, sep='\t', index=False, header=True)
     df_keep = result[result.Keep][['SampleID', 'Kneaddata_F', 'Kneaddata_R']]
     df_keep['num'] = list(range(1, df_keep.shape[0] + 1))
     df_keep = df_keep[['num', 'SampleID', 'Kneaddata_F', 'Kneaddata_R']]
     df_keep = df_keep.rename(columns={'Kneaddata_F':'Forward_read',
                                       'Kneaddata_R':'Reverse_read'})
-    df_keep.to_csv(os.path.join(dir, 'samples_to_process.tab'), sep='\t', index=None)
+    df_keep.to_csv(os.path.join(output_dir, 'samples_to_process.tab'), sep='\t', index=None)
     return outfile
 
 
@@ -116,15 +88,12 @@ def barplot(statfile, figname):
 #------------------------------------------------------------------------------------
 # Execute quality control stat
 #------------------------------------------------------------------------------------
-def qcheck_stats(project_dir, process_dir, qc):
+def qcheck_stats(project_dir, process_dir):
+    stats_dir = os.path.join(process_dir, 'stats')
     output_dir = os.path.join(process_dir, 'quality_control')
     util.create_dir(output_dir)
-    if qc:
-        config_file = config.read_config(project_dir)
-        min_readcount = int(config.read_from_config(config_file, 'QA', 'min_readcount'))
-        statfile = merge_stats(output_dir, min_readcount)
-        figname = os.path.join(output_dir, 'readcounts.png')
-        barplot(statfile, figname)
-    # to determine stat. for raw data
-    else:
-        merge_raw_stats(output_dir)
+    config_file = config.read_config(project_dir)
+    min_readcount = int(config.read_from_config(config_file, 'QA', 'min_readcount'))
+    statfile = merge_stats(stats_dir, output_dir, min_readcount)
+    figname = os.path.join(output_dir, 'readcounts.png')
+    barplot(statfile, figname)

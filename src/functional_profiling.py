@@ -60,12 +60,11 @@ def run_functional_profiling(project_dir, process_dir):
     config_file = config.read_config(project_dir)
 
     # list of samples
-    df_mapping = pd.read_csv(mapping_file, sep='\t')
     item = []
-    for idx in df_mapping.index:
-        sample = df_mapping.loc[idx,'SampleID']
-        fwd = df_mapping.loc[idx,'Forward_read']
-        rev = df_mapping.loc[idx,'Reverse_read']
+    for idx in mapping_file.index:
+        sample = mapping_file.loc[idx,'SampleID']
+        fwd = mapping_file.loc[idx,'Forward_read']
+        rev = mapping_file.loc[idx,'Reverse_read']
         item.append([sample, fwd, rev, config_file, process_dir])
     # Number of Parallel processing
     pool = mp.Pool(min(int(mp.cpu_count()/2),len(item)))

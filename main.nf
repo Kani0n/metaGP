@@ -61,7 +61,7 @@ process quality_control {
         path config
 
     output:
-        tuple path('remove_blankspace'), path('adapter_trimming'), path('decontamination'), path('stats')
+        tuple path('remove_blankspace'), path('adapter_trimming'), path('decontamination'), path('stats'), path('quality_control')
 
     script:
     """
@@ -77,7 +77,7 @@ process taxonomy_profiling {
         path qc
 
     output:
-        tuple path('taxonomic_profile'), path('Taxonomic_binning')
+        tuple path('taxonomic_profile'), path ('bowtie2db')
 
     script:
     """
@@ -90,7 +90,7 @@ process diversity_computation {
     publishDir 'div', mode: 'copy'
 
     input:
-        path taxo
+        //path taxo
 
     output:
         path 'diversity'
@@ -121,11 +121,11 @@ workflow {
 
     input_ch = Channel.of(params.i)
 
-    make_mapping_file(input_ch)
-    make_config_file(input_ch)
-    preprocessing(make_mapping_file.out)
-    quality_control(make_mapping_file.out, make_config_file.out)
-    taxonomy_profiling(quality_control.out)
-    diversity_computation(taxonomy_profiling.out)
-    functional_profiling(quality_control.out)
+    //make_mapping_file(input_ch)
+    //make_config_file(input_ch)
+    //preprocessing(make_mapping_file.out)
+    //quality_control(make_mapping_file.out, make_mapping_file.out)
+    //taxonomy_profiling(quality_control.out)
+    diversity_computation()
+    functional_profiling(diversity_computation.out)
 }

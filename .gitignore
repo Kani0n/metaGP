@@ -6,4 +6,5 @@ config/
 mapping/
 pre/
 qc/
+taxo/
 static/

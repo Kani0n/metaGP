@@ -8,11 +8,11 @@ import seaborn as sns
 import util, config
 
 
-def merging_abundance(output_dir, sampleseq):
-    tax_file = os.path.join(output_dir, 'OTUtable.rel_abundance.tab')
+def merging_abundance(taxo_dir, sampleseq):
+    tax_file = os.path.join(taxo_dir, 'OTUtable.rel_abundance.tab')
     filelist = ''
     for s in sampleseq:
-        filelist += os.path.join(output_dir, 'profiles', s + '.txt') + ' '
+        filelist += os.path.join(taxo_dir, 'profiles', s + '.txt') + ' '
     cmd = 'merge_metaphlan_tables.py ' + filelist + ' > ' + tax_file
     os.system(cmd)
     df_merged = pd.read_csv(tax_file, sep='\t', comment="#")
@@ -149,19 +149,19 @@ def taxoprof_stats(config_file, project_dir, process_dir):
 
     # for non-usgb and usgb
     for category in ['ignore_usgb','usgb']:
-        output_dir = os.path.join(process_dir, 'taxonomic_profile', category)
-        tax_file = merging_abundance(output_dir, sampleseq)
-        tax_bining = separate_taxrank(output_dir, tax_file)
+        taxo_dir = os.path.join(process_dir, 'taxonomic_profile', category)
+        tax_file = merging_abundance(taxo_dir, sampleseq)
+        tax_bining = separate_taxrank(taxo_dir, tax_file)
 
         if os.path.isfile(metafile):  
-            metadata = pd.read_csv(metafile,sep='\t',index_col=sampleid).loc[sampleseq,column_name]
+            metadata = pd.read_csv(metafile, sep='\t', index_col=sampleid).loc[sampleseq, column_name]
         else:
             metadata = 'no_metadata'
-        
+        print(metadata)
+
         for f in os.listdir(tax_bining):
             if f.endswith('.tab'):
-                filename = os.path.join(tax_bining,f)
-                print(filename)
+                filename = os.path.join(tax_bining, f)
                 show_top_n = 20     # Show top N taxa
                 show_abundant = 1      # Show the taxa with more abundance
                 plot_relabundance(filename, show_top_n, show_abundant, metadata)

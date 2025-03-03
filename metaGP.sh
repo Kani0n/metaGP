@@ -27,7 +27,7 @@ echo "INPUT DIR: ${INPUT}"
 #docker exec -d metagp nextflow run main.nf
 
 echo "SETTING UP ENVIRONMENT..."
-source /mnt/DATA/miniconda3/bin/activate
+source /mnt/main_hdd/miniconda3/bin/activate
 if ! { conda env list | grep 'metaGP'; } >/dev/null 2>&1; then
   echo "Building Conda Environment..."
   conda env create -f conda.yml

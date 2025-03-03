@@ -51,7 +51,7 @@ def make_config(project_dir, input_dir):
     minlength = 50
     headcrop = 10
     min_readcount = 4000000
-    taxo_db = 'static/database/bowtie2db'
+    taxo_db = 'bowtie2db'
     taxo_idx = 'mpa_vOct22_CHOCOPhlAnSGB_202212'
     abundance = 0.2
     prevalence = 30.5
