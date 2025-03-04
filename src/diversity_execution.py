@@ -196,10 +196,10 @@ def run_diversity_execution(project_dir, process_dir):
     metacol = config.read_from_config(config_file, 'Diversity', 'metafile_category')
     abund = float(config.read_from_config(config_file, 'Diversity', 'abundace_cutoff'))
     preval = float(config.read_from_config(config_file, 'Diversity', 'prevalent_cutoff'))
-
+    
     # for non-usgb and usgb
     for category in ['ignore_usgb', 'usgb']:
-        taxprof = os.path.join(project_dir, 'taxonomic_profile', category, 'Taxonomic_binning', taxofile)
+        taxprof = os.path.join(project_dir, 'taxo', 'taxonomic_profile', category, 'Taxonomic_binning', taxofile)
 
         # Filtering based on abundace and prevalence
         output_dir = os.path.join(process_dir, 'diversity', 'filtered_taxprof', category)

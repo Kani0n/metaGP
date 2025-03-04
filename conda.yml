@@ -17,10 +17,4 @@ dependencies:
   - metaphlan
   - scikit-bio
   - statannotations
-#  - samtools
-#  - ucsc-bedsort
-#  - ucsc-bedgraphtobigwig
-#  - bedtools
-#  - deeptools
-#  - homer
-#  - seacr
+  - humann

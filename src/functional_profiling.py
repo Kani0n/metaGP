@@ -4,7 +4,7 @@ import pandas as pd
 import multiprocessing as mp
 import os
 
-import util, mapping, config
+import util, config
 import functional_profiling_stats as stats
 
 
@@ -56,21 +56,20 @@ def functional_profiling_parallel(item):
 
 
 def run_functional_profiling(project_dir, process_dir):
-    mapping_file = mapping.read_mapping(project_dir)
+    df_mapping = util.adjust_paths(pd.read_csv(os.path.join(project_dir, 'qc', 'quality_control', 'samples_to_process.tab'), sep='\t'))
     config_file = config.read_config(project_dir)
 
     # list of samples
     item = []
-    for idx in mapping_file.index:
-        sample = mapping_file.loc[idx,'SampleID']
-        fwd = mapping_file.loc[idx,'Forward_read']
-        rev = mapping_file.loc[idx,'Reverse_read']
+    for idx in df_mapping.index:
+        sample = df_mapping.loc[idx,'SampleID']
+        fwd = df_mapping.loc[idx,'Forward_read']
+        rev = df_mapping.loc[idx,'Reverse_read']
         item.append([sample, fwd, rev, config_file, process_dir])
     # Number of Parallel processing
     pool = mp.Pool(min(int(mp.cpu_count()/2),len(item)))
     # parallel execution of functional_profile
     result = pool.map(functional_profiling_parallel, item)
     print(result)
-    exit()
     # functional_profiling report
-    stats.funcprof_stats(project_dir, process_dir)
+    stats.funcprof_stats(process_dir, df_mapping['SampleID'].to_list())

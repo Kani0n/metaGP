@@ -6,7 +6,7 @@ import multiprocessing as mp
 
 import util, config
 import taxonomy_profiling_stats as stats
-
+    
 
 def exec_metaphlan(sample, fwd, rev, config_file, process_dir, category, del_bowtieout):
     # metaphlan without usgbs or with usgbs
@@ -48,7 +48,7 @@ def taxonomy_profiling_parallel(item):
 
 
 def run_taxonomy_profiling(project_dir, process_dir):
-    df_mapping = pd.read_csv(os.path.join(project_dir, 'qc', 'quality_control', 'samples_to_process.tab'), sep='\t')
+    df_mapping = util.adjust_paths(pd.read_csv(os.path.join(project_dir, 'qc', 'quality_control', 'samples_to_process.tab'), sep='\t'))
     config_file = config.read_config(project_dir)
 
     item = []

@@ -51,7 +51,7 @@ def make_config(project_dir, input_dir):
     minlength = 50
     headcrop = 10
     min_readcount = 4000000
-    taxo_db = 'bowtie2db'
+    taxo_db = os.path.join(project_dir, 'static/database/bowtie2db')
     taxo_idx = 'mpa_vOct22_CHOCOPhlAnSGB_202212'
     abundance = 0.2
     prevalence = 30.5
@@ -59,9 +59,9 @@ def make_config(project_dir, input_dir):
     samplecol = 'column_name_of_samples'
     metacol = 'column_name_of_metainfo'
     taxlbl = 'g'
-    nt_db = 'static/database/bowtie2db/mpa_vOct22_CHOCOPhlAnSGB_202212'
-    pro_db = 'static/database/protein_db/uniref'
-    bw_db = 'static/database/bowtie2db'
+    nt_db = os.path.join(project_dir, 'static/database/bowtie2db/mpa_vOct22_CHOCOPhlAnSGB_202212')
+    pro_db = os.path.join(project_dir, 'static/database/protein_db/uniref')
+    bw_db = os.path.join(project_dir, 'static/database/bowtie2db')
     bowtie_idx = 'mpa_vOct22_CHOCOPhlAnSGB_202212'
 
     config = create_configfile(input_dir, adapter, hostdb, minlength, headcrop, min_readcount, taxo_db, taxo_idx, abundance, prevalence, metafile, samplecol, metacol, taxlbl, nt_db, pro_db, bw_db, bowtie_idx)

@@ -1,13 +1,11 @@
 #!/user/bin/env python3
 
-import pandas as pd
 import os
 
 import util
 
 
-def funcprof_stats(project_dir, process_dir):
-    sampleseq = pd.read_csv(os.path.join(project_dir, 'qc', 'quality_control', 'samples_to_process.tab'), sep='\t')['SampleID'].to_list()
+def funcprof_stats(process_dir, sampleseq):
     indir = os.path.join(process_dir, 'functional_profile')
 
     #create a new directory and store hmp results in it
