@@ -2,8 +2,6 @@
 
 process make_mapping_file {
 
-    conda "/mnt/DATA/miniconda3/envs/metaGP"
-
     publishDir 'mapping', mode: 'copy'
 
     input:
@@ -19,8 +17,6 @@ process make_mapping_file {
 }
 
 process make_config_file {
-
-    conda "/mnt/DATA/miniconda3/envs/metaGP"
 
     publishDir 'config', mode: 'copy'
 

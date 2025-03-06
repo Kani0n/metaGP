@@ -9,19 +9,6 @@ import pre_execution_stats as stats
 
 
 #------------------------------------------------------------------------------------
-# Execute FastQC on a file
-#------------------------------------------------------------------------------------
-def call_fastqc(list_files, process_dir):
-    input_files = ' '.join(list_files)
-    output_dir = os.path.join(process_dir, 'fastqc')
-    util.create_dir(output_dir)
-    cmd_fastqc = 'fastqc --quiet -o ' + output_dir + ' ' + input_files
-    print(cmd_fastqc)
-    os.system(cmd_fastqc)
-    #logging.info('FastQC reports: ' + output_dir)
-
-
-#------------------------------------------------------------------------------------
 # Compute the histogram of the read counts
 #------------------------------------------------------------------------------------
 def count_distribution(sample, fwd, rev, process_dir):
@@ -40,7 +27,8 @@ def count_distribution(sample, fwd, rev, process_dir):
 def pre_process_parallel(item):
     sample, fwd, rev, process_dir = item
     count_distribution(sample, fwd, rev, process_dir)
-    call_fastqc([fwd, rev], process_dir)
+    output_dir = os.path.join(process_dir, 'fastqc')
+    util.call_fastqc([fwd, rev], output_dir)
 
 
 #------------------------------------------------------------------------------------
