@@ -20,12 +20,21 @@ parser.add_argument('--div', dest='div_exec', action='store_true', default=False
                     help='Option for performing diversity analysis.')
 parser.add_argument('--func', dest='func_exec', action='store_true', default=False, 
                     help='Option for performing functional analysis.')
+
 parser.add_argument('-d', '--dir', dest='project_dir', type=str,
                     help='Project directory.')
 parser.add_argument('-p', '--p-dir', dest='process_dir', type=str,
                     help='Prcess directory.')
 parser.add_argument('-i', '--indir', dest='input_dir', type=str,
                     help='Input directory.')
+
+parser.add_argument('-s', '--sample', dest='sample', type=str,
+                    help='sample ID.')
+parser.add_argument('-f', '--fwd', dest='fwd', type=str,
+                    help='Path to forward read file.')
+parser.add_argument('-r', '--rev', dest='rev', type=str,
+                    help='Path to reverse read file.')
+
 args = parser.parse_args()
 
 MAPPING = args.mapping_exec
@@ -35,9 +44,14 @@ QC = args.qc_exec
 TAXO = args.taxo_exec
 DIV = args.div_exec
 FUNC = args.func_exec
+
 project_dir = args.project_dir
 process_dir = args.process_dir
 input_dir = args.input_dir
+
+sample = args.sample
+fwd = args.fwd
+rev = args.rev
 
 pd.set_option('display.max_colwidth', None)
 
@@ -46,12 +60,12 @@ if MAPPING:
 elif CONFIG:
     config.make_config(project_dir, input_dir)
 elif PRE:
-    pre_execution.run_pre_processing(project_dir, process_dir)
+    pre_execution.pre_process_parallel([sample, fwd, rev, process_dir])
 elif QC:
-    quality_control.run_quality_control(project_dir, process_dir)
+    quality_control.quality_control_parallel([sample, fwd, rev, process_dir])
 elif TAXO:
-    taxonomy_profiling.run_taxonomy_profiling(project_dir, process_dir)
+    taxonomy_profiling.taxonomy_profiling_parallel([sample, fwd, rev, process_dir])
 elif DIV:
-    diversity_execution.run_diversity_execution(project_dir, process_dir)
+    diversity_execution.run_diversity_execution(process_dir)
 elif FUNC:
-    functional_profiling.run_functional_profiling(project_dir, process_dir)
+    functional_profiling.functional_profiling_parallel([sample, fwd, rev, process_dir])

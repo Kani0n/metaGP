@@ -97,7 +97,8 @@ def call_kneaddata(fwd, rev, output_dir, config_file, bypass_trf):
 
 
 def quality_control_parallel(item):
-    sample, fwd, rev, process_dir, config_file = item
+    sample, fwd, rev, process_dir = item
+    config_file = config.read_config(process_dir)
     
     report = []
     sample_report = [sample]
@@ -138,11 +139,13 @@ def quality_control_parallel(item):
     outdir = os.path.join(process_dir, 'stats')
     util.create_dir(outdir)
     df.to_csv(os.path.join(outdir, sample + '.stat'), sep='\t', index=False)
+
+    stats.qcheck_stats(process_dir)
     
 
-def run_quality_control(project_dir, process_dir):
-    mapping_file = mapping.read_mapping(project_dir)
-    config_file = config.read_config(project_dir)
+def run_quality_control(process_dir):
+    mapping_file = mapping.read_mapping(process_dir)
+    config_file = config.read_config(process_dir)
 
     item = []
     for idx in mapping_file.index:
@@ -156,4 +159,4 @@ def run_quality_control(project_dir, process_dir):
     result = pool.map(quality_control_parallel, item)
     print(result)
     # quality_control report
-    stats.qcheck_stats(project_dir, process_dir)
+    stats.qcheck_stats(process_dir)

@@ -9,6 +9,11 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
+    -o|--output)
+      OUTPUT="$2"
+      shift # past argument
+      shift # past value
+      ;;
     -*|--*)
       echo "Unknown option $1"
       exit 1
@@ -21,6 +26,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo "INPUT DIR: ${INPUT}"
+echo "OUTPUT DIR: ${OUTPUT}"
 #echo "Building Docker..."
 #docker build -t metagp .
 #docker run --name metagp -d -i -t -v ${INPUT}:/data metagp
@@ -35,4 +41,4 @@ fi
 conda activate metaGP
 
 echo "STARTING..."
-nextflow run main.nf --i ${INPUT}
+nextflow run main.nf --i ${INPUT} --o ${OUTPUT}

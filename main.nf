@@ -1,14 +1,14 @@
 #!/usr/bin/env nextflow
 
+def input_dir = "${params.i}"
+def output_dir = "${params.o}"
+
 process make_mapping_file {
 
-    publishDir 'mapping', mode: 'copy'
-
-    input:
-        val input_dir
+    publishDir "${output_dir}/mapping", mode: 'copy'
     
     output:
-        path "mapping.tab"
+        file("mapping.tab") 
 
     script:
     """
@@ -18,13 +18,10 @@ process make_mapping_file {
 
 process make_config_file {
 
-    publishDir 'config', mode: 'copy'
+    publishDir "${output_dir}/config", mode: 'copy'
 
-    input:
-        val input_dir
-    
     output:
-        path "config.info"
+        file("config.info")
 
     script:
     """
@@ -34,94 +31,123 @@ process make_config_file {
 
 process preprocessing {
 
-    publishDir 'pre', mode: 'copy'
+    tag "${SampleID}"
+
+    publishDir "${output_dir}/pre/${SampleID}", mode: 'copy'
 
     input:
-        path mapping
+        tuple val(Num), val(SampleID), path(Forward_read), path(Reverse_read)
 
     output:
-        tuple path('stats'), path('fastqc')
+        tuple path('stats'), path('fastqc'), path('quality_control')
 
     script:
     """
-    python3 ${projectDir}/src/metaGP.py --pre -d ${projectDir} -p \$PWD
+    python3 ${projectDir}/src/metaGP.py --pre -p \$PWD -s ${SampleID} -f ${Forward_read} -r ${Reverse_read}
     """
 }
 
 process quality_control {
 
-    publishDir 'qc', mode: 'copy'
+    tag "${SampleID}"
+
+    publishDir "${output_dir}/qc/${SampleID}", mode: 'copy'
 
     input:
-        path mapping
         path config
+        tuple val(Num), val(SampleID), path(Forward_read), path(Reverse_read)
 
     output:
-        tuple path('remove_blankspace'), path('adapter_trimming'), path('decontamination'), path('stats'), path('quality_control')
+        tuple file('samples_to_process.tab'), path('remove_blankspace'), path('adapter_trimming'), path('decontamination'), path('stats'), path('quality_control')
 
     script:
     """
-    python3 ${projectDir}/src/metaGP.py --qc -d ${projectDir} -p \$PWD
+    python3 ${projectDir}/src/metaGP.py --qc -p \$PWD  -s ${SampleID} -f ${Forward_read} -r ${Reverse_read}
     """
 }
 
 process taxonomy_profiling {
 
-    publishDir 'taxo', mode: 'copy'
+    tag "${SampleID}"
+
+    publishDir "${output_dir}/taxo/${SampleID}", mode: 'copy'
 
     input:
-        path qc
+        path config
+        tuple val(Num), val(SampleID), path(Forward_read), path(Reverse_read)
 
     output:
         path 'taxonomic_profile'
 
     script:
     """
-    python3 ${projectDir}/src/metaGP.py --taxo -d ${projectDir} -p \$PWD
+    python3 ${projectDir}/src/metaGP.py --taxo -p \$PWD -s ${SampleID} -f ${Forward_read} -r ${Reverse_read}
     """
 }
 
 process diversity_computation {
 
-    publishDir 'div', mode: 'copy'
+    tag "${SampleID}"
+
+    publishDir "${output_dir}/div/${SampleID}", mode: 'copy'
 
     input:
+        path config
         path taxo
+        tuple val(Num), val(SampleID), path(Forward_read), path(Reverse_read)
 
     output:
         path 'diversity'
 
     script:
     """
-    python3 ${projectDir}/src/metaGP.py --div -d ${projectDir} -p \$PWD
+    python3 ${projectDir}/src/metaGP.py --div -p \$PWD -s ${SampleID} -f ${Forward_read} -r ${Reverse_read}
     """
 }
 
 process functional_profiling {
 
-    publishDir 'func', mode: 'copy'
+    tag "${SampleID}"
+
+    publishDir "${output_dir}/func/${SampleID}", mode: 'copy'
 
     input:
-        path qc
+        path config
+        tuple val(Num), val(SampleID), path(Forward_read), path(Reverse_read)
 
     output:
         path 'functional_profile'
 
     script:
     """
-    python3 ${projectDir}/src/metaGP.py --func -d ${projectDir} -p \$PWD
+    python3 ${projectDir}/src/metaGP.py --func -p \$PWD -s ${SampleID} -f ${Forward_read} -r ${Reverse_read}
     """
 }
 
 workflow {
 
-    input_ch = Channel.of(params.i)
-
-    make_mapping_file(input_ch)
-    make_config_file(input_ch)
-    preprocessing(make_mapping_file.out)
-    quality_control(make_mapping_file.out, make_mapping_file.out)
-    taxonomy_profiling(quality_control.out)
-    diversity_computation(taxonomy_profiling.out)
-    functional_profiling(quality_control.out)
+    make_mapping_file()
+    make_config_file()
+    preprocessing(make_mapping_file.out
+                    .splitCsv(header: ['Num', 'SampleID', 'Forward_read', 'Reverse_read'], sep: '\t', skip: 1)
+                    .map{ row -> tuple(row.Num, row.SampleID, row.Forward_read, row.Reverse_read)})
+    quality_control(make_config_file.out,
+                    make_mapping_file.out
+                        .splitCsv(header: ['Num', 'SampleID', 'Forward_read', 'Reverse_read'], sep: '\t', skip: 1)
+                        .map{ row -> tuple(row.Num, row.SampleID, row.Forward_read, row.Reverse_read)})
+    taxonomy_profiling(make_config_file.out,
+                       quality_control.out[0]
+                        .splitCsv(header: ['Num', 'SampleID', 'Forward_read', 'Reverse_read'], sep: '\t', skip: 1)
+                        .map{ row -> tuple(row.Num, row.SampleID, row.Forward_read, row.Reverse_read)})
+                        /*
+    diversity_computation(make_config_file.out,
+                          taxonomy_profiling.out,
+                          quality_control.out[0]
+                            .splitCsv(header: ['Num', 'SampleID', 'Forward_read', 'Reverse_read'], sep: '\t', skip: 1)
+                            .map{ row -> tuple(row.Num, row.SampleID, row.Forward_read, row.Reverse_read)})
+                            */
+    functional_profiling(make_config_file.out,
+                         quality_control.out[0]
+                            .splitCsv(header: ['Num', 'SampleID', 'Forward_read', 'Reverse_read'], sep: '\t', skip: 1)
+                            .map{ row -> tuple(row.Num, row.SampleID, row.Forward_read, row.Reverse_read)})
 }

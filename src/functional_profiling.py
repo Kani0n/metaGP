@@ -45,19 +45,19 @@ def exec_humann(concat_file, config_file):
 
 
 def functional_profiling_parallel(item):
-    sample, fwd, rev, config_file, process_dir = item
+    sample, fwd, rev, process_dir = item
+    config_file = config.read_config(process_dir)
 
     output_dir = os.path.join(process_dir, 'functional_profile')
     util.create_dir(output_dir)
 
     concat_file = concat_pairs(sample, fwd, rev, output_dir)
-
     exec_humann(concat_file, config_file)
 
 
-def run_functional_profiling(project_dir, process_dir):
-    df_mapping = util.adjust_paths(pd.read_csv(os.path.join(project_dir, 'qc', 'quality_control', 'samples_to_process.tab'), sep='\t'))
-    config_file = config.read_config(project_dir)
+def run_functional_profiling(process_dir):
+    df_mapping = util.adjust_paths(pd.read_csv(os.path.join(process_dir, 'quality_control', 'samples_to_process.tab'), sep='\t'), process_dir)
+    config_file = config.read_config(process_dir)
 
     # list of samples
     item = []

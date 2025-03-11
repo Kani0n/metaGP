@@ -141,11 +141,11 @@ def plot_relabundance(abun_file, show_top_n, show_abundant, metadata):
     plt.savefig(abun_file.replace('.tab','.png'),bbox_inches='tight')
 
 
-def taxoprof_stats(config_file, project_dir, process_dir):
+def taxoprof_stats(config_file, process_dir):
     metafile = config.read_from_config(config_file, 'Diversity', 'metafile_for_diversity')
     sampleid = config.read_from_config(config_file, 'Diversity', 'metafile_sampleid')
     column_name = config.read_from_config(config_file, 'Diversity', 'metafile_category')
-    sampleseq = pd.read_csv(os.path.join(project_dir, 'qc', 'quality_control', 'samples_to_process.tab'), sep='\t')['SampleID'].to_list()
+    sampleseq = pd.read_csv(os.path.join(process_dir, 'quality_control', 'samples_to_process.tab'), sep='\t')['SampleID'].to_list()
 
     # for non-usgb and usgb
     for category in ['ignore_usgb','usgb']:

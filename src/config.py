@@ -102,9 +102,9 @@ def print_config(config):
 #------------------------------------------------------------------------------------
 # Get config file
 #------------------------------------------------------------------------------------
-def read_config(project_dir):
+def read_config(process_dir):
     config = configparser.ConfigParser()
-    config.read(os.path.join(project_dir, 'config', 'config.info'))
+    config.read(os.path.join(process_dir, 'config.info'))
     return config
 
 

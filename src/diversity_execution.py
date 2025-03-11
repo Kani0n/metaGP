@@ -75,9 +75,10 @@ def compute_alpha_diversity(abundance_file, metafile, sample, column, outdir):
     df = pd.DataFrame(list(zip(ids, richness, shannon, shannon_effective, simpson, simpson_effective, simpson_e)),
                       columns=['SampleID'] + all_param,
                       ).set_index('SampleID')
-    df.to_csv(os.path.join(outdir, 'alpha_diversity.tab'), sep='\t')      
+    df.to_csv(os.path.join(outdir, 'alpha_diversity.tab'), sep='\t')
+    return  
     # Metadata
-    df_metainfo = pd.read_csv(metafile, sep='t').set_index(sample)
+    df_metainfo = pd.read_csv(metafile, sep='\t').set_index(sample)
     df['subject'] = df_metainfo[column]
     print(df_metainfo[column])
     pairs = list(combinations(df['subject'].unique(), 2))
@@ -186,8 +187,8 @@ def compute_beta_diversity(abundance_file, metafile, sample, column, outdir):
     plt.savefig(os.path.join(outdir, 'pcoa.png'), dpi=200, bbox_inches='tight')
 
 
-def run_diversity_execution(project_dir, process_dir):
-    config_file = config.read_config(project_dir)
+def run_diversity_execution(process_dir):
+    config_file = config.read_config(process_dir)
 
     tax_lbl_for_diversity = config.read_from_config(config_file, 'Diversity', 'tax_lbl_for_diversity')
     taxofile = '4_family.tab' if tax_lbl_for_diversity == 'f' else '5_genera.tab' if tax_lbl_for_diversity == 'g' else '6_species.tab' 
@@ -199,7 +200,7 @@ def run_diversity_execution(project_dir, process_dir):
     
     # for non-usgb and usgb
     for category in ['ignore_usgb', 'usgb']:
-        taxprof = os.path.join(project_dir, 'taxo', 'taxonomic_profile', category, 'Taxonomic_binning', taxofile)
+        taxprof = os.path.join(process_dir, 'taxonomic_profile', category, 'Taxonomic_binning', taxofile)
 
         # Filtering based on abundace and prevalence
         output_dir = os.path.join(process_dir, 'diversity', 'filtered_taxprof', category)

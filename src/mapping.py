@@ -76,5 +76,5 @@ def make_mapping(process_dir, input_dir):
 #------------------------------------------------------------------------------------
 # Reading mapping file
 #------------------------------------------------------------------------------------
-def read_mapping(project_dir):
-    return pd.read_csv(os.path.join(project_dir, 'mapping', 'mapping.tab'), sep='\t', header=0, index_col=False)
+def read_mapping(process_dir):
+    return pd.read_csv(os.path.join(process_dir, 'mapping.tab'), sep='\t', header=0, index_col=False)

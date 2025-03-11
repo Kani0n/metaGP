@@ -11,7 +11,7 @@ import util, config
 #------------------------------------------------------------------------------------
 # Merge the statistic files. The statistic files endswith '.stat' 
 #------------------------------------------------------------------------------------
-def merge_stats(stats_dir, output_dir, min_readcount):
+def merge_stats(stats_dir, output_dir, process_dir, min_readcount):
     frames = []
     count = 0
     for f in os.listdir(stats_dir):
@@ -20,7 +20,7 @@ def merge_stats(stats_dir, output_dir, min_readcount):
             frames.append(pd.read_csv(filename, sep='\t'))
             count += 1
     result = pd.concat(frames)
-    result['num'] = list(range(1, count + 1))
+    result['Num'] = list(range(1, count + 1))
     cols = result.columns.tolist()
     cols = cols[-1:] + cols[:-1]
     result = result[cols]
@@ -35,7 +35,7 @@ def merge_stats(stats_dir, output_dir, min_readcount):
     result['Final.Percent'] = result[['Final.Count']].div(result['Raw.Count'], axis=0)
     result['LowQ.Count'] = result['Raw.Count'] - result['Trim.Count'] - result['Human_Contam.Count'] - result['Mouse_Contam.Count'] - result['Final.Count']
     result['LowQ.Percent'] = result[['LowQ.Count']].div(result['Raw.Count'], axis=0)
-    cols = ['num', 'SampleID', 'Raw_F', 'Raw_R', 'Raw.Count', 
+    cols = ['Num', 'SampleID', 'Raw_F', 'Raw_R', 'Raw.Count', 
             'Trim_F', 'Trim_R', 'Trim.Count', 'Trim.Percent',
             'Human_Contam_F', 'Human_Contam_R', 'Human_Contam.Count', 'Human_Contam.Percent', 
             'Mouse_Contam_F', 'Mouse_Contam_R', 'Mouse_Contam.Count', 'Mouse_Contam.Percent', 
@@ -47,11 +47,11 @@ def merge_stats(stats_dir, output_dir, min_readcount):
     outfile = os.path.join(output_dir, 'readcounts.tab')
     result.to_csv(outfile, sep='\t', index=False, header=True)
     df_keep = result[result.Keep][['SampleID', 'Kneaddata_F', 'Kneaddata_R']]
-    df_keep['num'] = list(range(1, df_keep.shape[0] + 1))
-    df_keep = df_keep[['num', 'SampleID', 'Kneaddata_F', 'Kneaddata_R']]
+    df_keep['Num'] = list(range(1, df_keep.shape[0] + 1))
+    df_keep = df_keep[['Num', 'SampleID', 'Kneaddata_F', 'Kneaddata_R']]
     df_keep = df_keep.rename(columns={'Kneaddata_F':'Forward_read',
                                       'Kneaddata_R':'Reverse_read'})
-    df_keep.to_csv(os.path.join(output_dir, 'samples_to_process.tab'), sep='\t', index=None)
+    df_keep.to_csv(os.path.join(process_dir, 'samples_to_process.tab'), sep='\t', index=None)
     return outfile
 
 
@@ -88,12 +88,12 @@ def barplot(statfile, figname):
 #------------------------------------------------------------------------------------
 # Execute quality control stat
 #------------------------------------------------------------------------------------
-def qcheck_stats(project_dir, process_dir):
+def qcheck_stats(process_dir):
     stats_dir = os.path.join(process_dir, 'stats')
     output_dir = os.path.join(process_dir, 'quality_control')
     util.create_dir(output_dir)
-    config_file = config.read_config(project_dir)
+    config_file = config.read_config(process_dir)
     min_readcount = int(config.read_from_config(config_file, 'QA', 'min_readcount'))
-    statfile = merge_stats(stats_dir, output_dir, min_readcount)
+    statfile = merge_stats(stats_dir, output_dir, process_dir, min_readcount)
     figname = os.path.join(output_dir, 'readcounts.png')
     barplot(statfile, figname)

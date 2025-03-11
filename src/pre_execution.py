@@ -29,13 +29,14 @@ def pre_process_parallel(item):
     count_distribution(sample, fwd, rev, process_dir)
     output_dir = os.path.join(process_dir, 'fastqc')
     util.call_fastqc([fwd, rev], output_dir)
+    stats.qcheck_stats(process_dir)
 
 
 #------------------------------------------------------------------------------------
 # Main function for pre-processing
 #------------------------------------------------------------------------------------
-def run_pre_processing(project_dir, process_dir):
-    mapping_file = mapping.read_mapping(project_dir)
+def run_pre_processing(process_dir):
+    mapping_file = mapping.read_mapping(process_dir)
 
     item = []
     for idx in mapping_file.index:

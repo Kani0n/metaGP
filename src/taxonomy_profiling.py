@@ -40,16 +40,18 @@ def exec_metaphlan(sample, fwd, rev, config_file, process_dir, category, del_bow
 
 
 def taxonomy_profiling_parallel(item):
-    sample, fwd, rev, config_file, process_dir = item
+    sample, fwd, rev, process_dir = item
+    config_file = config.read_config(process_dir)
     output_dir = os.path.join(process_dir, 'taxonomic_profile')
     util.create_dir(output_dir)
     for category in ['ignore_usgb','usgb']:
         exec_metaphlan(sample, fwd, rev, config_file, process_dir, category, del_bowtieout=False)
+    stats.taxoprof_stats(config_file, process_dir)
 
 
-def run_taxonomy_profiling(project_dir, process_dir):
-    df_mapping = util.adjust_paths(pd.read_csv(os.path.join(project_dir, 'qc', 'quality_control', 'samples_to_process.tab'), sep='\t'))
-    config_file = config.read_config(project_dir)
+def run_taxonomy_profiling(process_dir):
+    df_mapping = util.adjust_paths(pd.read_csv(os.path.join(process_dir, 'quality_control', 'samples_to_process.tab'), sep='\t'), process_dir)
+    config_file = config.read_config(process_dir)
 
     item = []
     for idx in df_mapping.index:
@@ -62,4 +64,4 @@ def run_taxonomy_profiling(project_dir, process_dir):
     result = pool.map(taxonomy_profiling_parallel, item)
     print(result)
     # taxonomy_profiling report
-    stats.taxoprof_stats(config_file, project_dir, process_dir)
+    stats.taxoprof_stats(config_file, process_dir)
