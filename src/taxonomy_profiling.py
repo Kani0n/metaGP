@@ -1,18 +1,16 @@
 #!/user/bin/env python3
 
-import pandas as pd
-import os
 import multiprocessing as mp
+import os
 
 import util, config
-import taxonomy_profiling_stats as stats
     
 
 def exec_metaphlan(sample, fwd, rev, config_file, process_dir, category, del_bowtieout):
     # metaphlan without usgbs or with usgbs
-    samdir = os.path.join(process_dir, 'taxonomic_profile', category, 'sam')
-    bowtiedir = os.path.join(process_dir, 'taxonomic_profile', category, 'bowtie2')
-    profiledir = os.path.join(process_dir, 'taxonomic_profile', category, 'profiles')
+    samdir = os.path.join(process_dir, category, 'sam')
+    bowtiedir = os.path.join(process_dir, category, 'bowtie2')
+    profiledir = os.path.join(process_dir, category, 'profiles')
     util.create_dir(samdir)
     util.create_dir(bowtiedir)
     util.create_dir(profiledir)
@@ -39,29 +37,14 @@ def exec_metaphlan(sample, fwd, rev, config_file, process_dir, category, del_bow
         os.remove(bowtieout)
 
 
-def taxonomy_profiling_parallel(item):
+def run_taxonomy_profiling(item):
     sample, fwd, rev, process_dir = item
     config_file = config.read_config(process_dir)
-    output_dir = os.path.join(process_dir, 'taxonomic_profile')
-    util.create_dir(output_dir)
+
+    categories = []
     for category in ['ignore_usgb','usgb']:
-        exec_metaphlan(sample, fwd, rev, config_file, process_dir, category, del_bowtieout=False)
-    stats.taxoprof_stats(config_file, process_dir)
-
-
-def run_taxonomy_profiling(process_dir):
-    df_mapping = util.adjust_paths(pd.read_csv(os.path.join(process_dir, 'quality_control', 'samples_to_process.tab'), sep='\t'), process_dir)
-    config_file = config.read_config(process_dir)
-
-    item = []
-    for idx in df_mapping.index:
-        sample = df_mapping.loc[idx,'SampleID']
-        fwd = df_mapping.loc[idx,'Forward_read']
-        rev = df_mapping.loc[idx,'Reverse_read']
-        item.append([sample, fwd, rev, config_file, process_dir])
-    pool = mp.Pool(min(int(mp.cpu_count()/2), len(item)))
+        categories.append([sample, fwd, rev, config_file, process_dir, category, False])
+    pool = mp.Pool(min(int(mp.cpu_count()/2), len(categories)))
     # parallel execution of taxonomy_profiling
-    result = pool.map(taxonomy_profiling_parallel, item)
+    result = pool.map(exec_metaphlan, categories)
     print(result)
-    # taxonomy_profiling report
-    stats.taxoprof_stats(config_file, process_dir)

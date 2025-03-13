@@ -8,7 +8,7 @@ process make_mapping_file {
     publishDir "${output_dir}/mapping", mode: 'copy'
     
     output:
-        file("mapping.tab") 
+        file('mapping.tab') 
 
     script:
     """
@@ -21,7 +21,7 @@ process make_config_file {
     publishDir "${output_dir}/config", mode: 'copy'
 
     output:
-        file("config.info")
+        file('config.info')
 
     script:
     """
@@ -39,11 +39,28 @@ process preprocessing {
         tuple val(Num), val(SampleID), path(Forward_read), path(Reverse_read)
 
     output:
-        tuple path('stats'), path('fastqc'), path('quality_control')
+        tuple path('stats'), path('fastqc')
 
     script:
     """
     python3 ${projectDir}/src/metaGP.py --pre -p \$PWD -s ${SampleID} -f ${Forward_read} -r ${Reverse_read}
+    """
+}
+
+process preprocessing_stats {
+
+    publishDir "${output_dir}/pre_stats", mode: 'copy'
+
+    input:
+        file(mapping)
+
+    output:
+        file('raw_readcount.tab')
+        file('raw_readcount.png')
+
+    script:
+    """
+    python3 ${projectDir}/src/metaGP.py --pres -p \$PWD -m ${mapping} -o ${output_dir}
     """
 }
 
@@ -54,15 +71,33 @@ process quality_control {
     publishDir "${output_dir}/qc/${SampleID}", mode: 'copy'
 
     input:
-        path config
+        file(config)
         tuple val(Num), val(SampleID), path(Forward_read), path(Reverse_read)
 
     output:
-        tuple file('samples_to_process.tab'), path('remove_blankspace'), path('adapter_trimming'), path('decontamination'), path('stats'), path('quality_control')
+        tuple path('remove_blankspace'), path('adapter_trimming'), path('decontamination'), path('stats')
 
     script:
     """
     python3 ${projectDir}/src/metaGP.py --qc -p \$PWD  -s ${SampleID} -f ${Forward_read} -r ${Reverse_read}
+    """
+}
+
+process quality_control_stats {
+
+    publishDir "${output_dir}/qc_stats", mode: 'copy'
+
+    input:
+        file(config)
+        file(mapping)
+
+    output:
+        file('readcounts.tab')
+        file('samples_to_process.tab')
+
+    script:
+    """
+    python3 ${projectDir}/src/metaGP.py --qcs -p \$PWD -m ${mapping} -o ${output_dir}
     """
 }
 
@@ -73,15 +108,33 @@ process taxonomy_profiling {
     publishDir "${output_dir}/taxo/${SampleID}", mode: 'copy'
 
     input:
-        path config
+        file(config)
         tuple val(Num), val(SampleID), path(Forward_read), path(Reverse_read)
 
     output:
-        path 'taxonomic_profile'
+        tuple path('sam'), path('bowtie2'), path('profiles')
 
     script:
     """
     python3 ${projectDir}/src/metaGP.py --taxo -p \$PWD -s ${SampleID} -f ${Forward_read} -r ${Reverse_read}
+    """
+}
+
+process taxonomy_profiling_stats {
+
+    publishDir "${output_dir}/taxo_stats", mode: 'copy'
+
+    input:
+        file(config)
+        file(mapping)
+
+    output:
+        path('ignore_usgb')
+        path('usgb')
+
+    script:
+    """
+    python3 ${projectDir}/src/metaGP.py --taxos -p \$PWD -m ${mapping} -o ${output_dir}
     """
 }
 
@@ -92,8 +145,8 @@ process diversity_computation {
     publishDir "${output_dir}/div/${SampleID}", mode: 'copy'
 
     input:
-        path config
-        path taxo
+        file(config)
+        path(taxo)
         tuple val(Num), val(SampleID), path(Forward_read), path(Reverse_read)
 
     output:
@@ -112,11 +165,11 @@ process functional_profiling {
     publishDir "${output_dir}/func/${SampleID}", mode: 'copy'
 
     input:
-        path config
+        file(config)
         tuple val(Num), val(SampleID), path(Forward_read), path(Reverse_read)
 
     output:
-        path 'functional_profile'
+        path('functional_profile')
 
     script:
     """
@@ -124,30 +177,51 @@ process functional_profiling {
     """
 }
 
-workflow {
+process functional_profiling_stats {
 
+    publishDir "${output_dir}/func_stats", mode: 'copy'
+
+    input:
+        file(mapping)
+
+    output:
+        path('ignore_usgb')
+        path('usgb')
+
+    script:
+    """
+    python3 ${projectDir}/src/metaGP.py --funcs -p \$PWD -m ${mapping} -o ${output_dir}
+    """
+}
+
+workflow {
+    
     make_mapping_file()
     make_config_file()
     preprocessing(make_mapping_file.out
                     .splitCsv(header: ['Num', 'SampleID', 'Forward_read', 'Reverse_read'], sep: '\t', skip: 1)
                     .map{ row -> tuple(row.Num, row.SampleID, row.Forward_read, row.Reverse_read)})
+    preprocessing_stats(make_mapping_file.out)
     quality_control(make_config_file.out,
                     make_mapping_file.out
                         .splitCsv(header: ['Num', 'SampleID', 'Forward_read', 'Reverse_read'], sep: '\t', skip: 1)
                         .map{ row -> tuple(row.Num, row.SampleID, row.Forward_read, row.Reverse_read)})
+    quality_control_stats(make_config_file.out, make_mapping_file.out)
     taxonomy_profiling(make_config_file.out,
-                       quality_control.out[0]
+                       quality_control_stats.out[1]
                         .splitCsv(header: ['Num', 'SampleID', 'Forward_read', 'Reverse_read'], sep: '\t', skip: 1)
                         .map{ row -> tuple(row.Num, row.SampleID, row.Forward_read, row.Reverse_read)})
-                        /*
+    taxonomy_profiling_stats(make_config_file.out, quality_control_stats.out[1])
+    /*
     diversity_computation(make_config_file.out,
                           taxonomy_profiling.out,
                           quality_control.out[0]
                             .splitCsv(header: ['Num', 'SampleID', 'Forward_read', 'Reverse_read'], sep: '\t', skip: 1)
                             .map{ row -> tuple(row.Num, row.SampleID, row.Forward_read, row.Reverse_read)})
-                            */
+    */
     functional_profiling(make_config_file.out,
-                         quality_control.out[0]
+                         quality_control_stats.out[1]
                             .splitCsv(header: ['Num', 'SampleID', 'Forward_read', 'Reverse_read'], sep: '\t', skip: 1)
                             .map{ row -> tuple(row.Num, row.SampleID, row.Forward_read, row.Reverse_read)})
+    functional_profiling_stats(quality_control_stats.out[1])
 }

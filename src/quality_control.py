@@ -1,11 +1,9 @@
 #!/user/bin/env python3
 
 import os
-import multiprocessing as mp
 import pandas as pd
 
-import util, mapping, config
-import quality_control_stats as stats
+import util, config
 
 
 def remove_blankspace(fwd, rev, output_dir):
@@ -96,7 +94,7 @@ def call_kneaddata(fwd, rev, output_dir, config_file, bypass_trf):
     return  [repeat_fwd, repeat_rev, trim_fwd, trim_rev, human_contam_fwd, human_contam_rev, mouse_contam_fwd, mouse_contam_rev, out_fwd_file, out_rev_file]
 
 
-def quality_control_parallel(item):
+def run_quality_control(item):
     sample, fwd, rev, process_dir = item
     config_file = config.read_config(process_dir)
     
@@ -139,24 +137,3 @@ def quality_control_parallel(item):
     outdir = os.path.join(process_dir, 'stats')
     util.create_dir(outdir)
     df.to_csv(os.path.join(outdir, sample + '.stat'), sep='\t', index=False)
-
-    stats.qcheck_stats(process_dir)
-    
-
-def run_quality_control(process_dir):
-    mapping_file = mapping.read_mapping(process_dir)
-    config_file = config.read_config(process_dir)
-
-    item = []
-    for idx in mapping_file.index:
-        sample = mapping_file.loc[idx, 'SampleID']
-        fwd = mapping_file.loc[idx, 'Forward_read']
-        rev = mapping_file.loc[idx, 'Reverse_read']
-        item.append([sample, fwd, rev, process_dir, config_file])
-    # Number of Parallel processing
-    pool = mp.Pool(min(int(mp.cpu_count()/2), len(item)))
-
-    result = pool.map(quality_control_parallel, item)
-    print(result)
-    # quality_control report
-    stats.qcheck_stats(process_dir)

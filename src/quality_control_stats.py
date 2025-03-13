@@ -1,24 +1,28 @@
 #!/user/bin/env python3
 
-import os
 import pandas as pd
+import os
+import time
 import matplotlib.pyplot as plt
 import numpy as np
 
-import util, config
+import config
 
 
 #------------------------------------------------------------------------------------
 # Merge the statistic files. The statistic files endswith '.stat' 
 #------------------------------------------------------------------------------------
-def merge_stats(stats_dir, output_dir, process_dir, min_readcount):
+def merge_stats(qc_out_dir, process_dir, min_readcount):
     frames = []
     count = 0
-    for f in os.listdir(stats_dir):
-        if f.endswith('.stat'):
-            filename = os.path.join(stats_dir, f)
-            frames.append(pd.read_csv(filename, sep='\t'))
-            count += 1
+    for root, dirs, files in os.walk(qc_out_dir):
+        for file in files:
+            # check the extension of files
+            if file.endswith('.stat'):
+                # print whole path of files
+                filename = os.path.join(root, file)
+                frames.append(pd.read_csv(filename, sep='\t'))
+                count += 1
     result = pd.concat(frames)
     result['Num'] = list(range(1, count + 1))
     cols = result.columns.tolist()
@@ -44,7 +48,7 @@ def merge_stats(stats_dir, output_dir, process_dir, min_readcount):
     result = result[cols]
     result['Keep'] = np.where(result['Final.Count'] >= min_readcount, True, False)
     result = result.sort_values('Final.Count', ascending=False)
-    outfile = os.path.join(output_dir, 'readcounts.tab')
+    outfile = os.path.join(process_dir, 'readcounts.tab')
     result.to_csv(outfile, sep='\t', index=False, header=True)
     df_keep = result[result.Keep][['SampleID', 'Kneaddata_F', 'Kneaddata_R']]
     df_keep['Num'] = list(range(1, df_keep.shape[0] + 1))
@@ -88,12 +92,16 @@ def barplot(statfile, figname):
 #------------------------------------------------------------------------------------
 # Execute quality control stat
 #------------------------------------------------------------------------------------
-def qcheck_stats(process_dir):
-    stats_dir = os.path.join(process_dir, 'stats')
-    output_dir = os.path.join(process_dir, 'quality_control')
-    util.create_dir(output_dir)
+def qcheck_stats(mapping_file, process_dir, output_dir):
+    samples = pd.read_csv(mapping_file, sep='\t')['SampleID'].tolist()
+    qc_out_dir = os.path.join(output_dir, 'qc')
+    while not os.path.isdir(qc_out_dir) or set(samples) != set(os.listdir(qc_out_dir)):
+        print('sleeping...')
+        time.sleep(60)
+
     config_file = config.read_config(process_dir)
     min_readcount = int(config.read_from_config(config_file, 'QA', 'min_readcount'))
-    statfile = merge_stats(stats_dir, output_dir, process_dir, min_readcount)
-    figname = os.path.join(output_dir, 'readcounts.png')
+
+    statfile = merge_stats(qc_out_dir, process_dir, min_readcount)
+    figname = os.path.join(process_dir, 'readcounts.png')
     barplot(statfile, figname)

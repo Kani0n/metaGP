@@ -76,7 +76,7 @@ def compute_alpha_diversity(abundance_file, metafile, sample, column, outdir):
                       columns=['SampleID'] + all_param,
                       ).set_index('SampleID')
     df.to_csv(os.path.join(outdir, 'alpha_diversity.tab'), sep='\t')
-    return  
+    #return  
     # Metadata
     df_metainfo = pd.read_csv(metafile, sep='\t').set_index(sample)
     df['subject'] = df_metainfo[column]
@@ -93,7 +93,7 @@ def compute_alpha_diversity(abundance_file, metafile, sample, column, outdir):
         stats_param.update({param:[(i,j) for i,j in zip(pairs, compute_stat(df, param, pairs))]})
         print(df)
         boxplot(ax, df, 'subject', param, pairs)
-        plot_loc += 1    
+        plot_loc += 1
     fig.tight_layout()
     plt.savefig(os.path.join(outdir, 'alpha.png'), bbox_inches='tight', dpi=180)
 
@@ -198,7 +198,6 @@ def run_diversity_execution(process_dir):
     abund = float(config.read_from_config(config_file, 'Diversity', 'abundace_cutoff'))
     preval = float(config.read_from_config(config_file, 'Diversity', 'prevalent_cutoff'))
     
-    # for non-usgb and usgb
     for category in ['ignore_usgb', 'usgb']:
         taxprof = os.path.join(process_dir, 'taxonomic_profile', category, 'Taxonomic_binning', taxofile)
 

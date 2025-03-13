@@ -2,27 +2,28 @@
 
 import pandas as pd
 import os
+import time
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 import util, config
 
 
-def merging_abundance(taxo_dir, sampleseq):
+def merging_abundance(taxo_out_dir, taxo_dir, samples):
     tax_file = os.path.join(taxo_dir, 'OTUtable.rel_abundance.tab')
     filelist = ''
-    for s in sampleseq:
-        filelist += os.path.join(taxo_dir, 'profiles', s + '.txt') + ' '
+    for s in samples:
+        filelist += os.path.join(taxo_out_dir, s, 'profiles', s + '.txt') + ' '
     cmd = 'merge_metaphlan_tables.py ' + filelist + ' > ' + tax_file
     os.system(cmd)
     df_merged = pd.read_csv(tax_file, sep='\t', comment="#")
-    df_merged = df_merged.set_index('clade_name')[sampleseq]
+    df_merged = df_merged.set_index('clade_name')[samples]
     df_merged.to_csv(tax_file, sep='\t')
     return tax_file
 
 
-def separate_taxrank(output_dir, merged_file):
-    outdir = os.path.join(output_dir, 'Taxonomic_binning')
+def separate_taxrank(taxo_dir, merged_file):
+    outdir = os.path.join(taxo_dir, 'Taxonomic_binning')
     util.create_dir(outdir)
     
     fp_k = open(outdir + '/0_kingdom.tab', 'w')
@@ -141,20 +142,26 @@ def plot_relabundance(abun_file, show_top_n, show_abundant, metadata):
     plt.savefig(abun_file.replace('.tab','.png'),bbox_inches='tight')
 
 
-def taxoprof_stats(config_file, process_dir):
+def taxoprof_stats(mapping_file, process_dir, output_dir):
+    config_file = config.read_config(process_dir)
     metafile = config.read_from_config(config_file, 'Diversity', 'metafile_for_diversity')
     sampleid = config.read_from_config(config_file, 'Diversity', 'metafile_sampleid')
     column_name = config.read_from_config(config_file, 'Diversity', 'metafile_category')
-    sampleseq = pd.read_csv(os.path.join(process_dir, 'quality_control', 'samples_to_process.tab'), sep='\t')['SampleID'].to_list()
 
-    # for non-usgb and usgb
+    samples = pd.read_csv(mapping_file, sep='\t')['SampleID'].tolist()
+    taxo_out_dir = os.path.join(output_dir, 'taxo')
+    while not os.path.isdir(taxo_out_dir) or set(samples) != set(os.listdir(taxo_out_dir)):
+        print('sleeping...')
+        time.sleep(60)
+
     for category in ['ignore_usgb','usgb']:
-        taxo_dir = os.path.join(process_dir, 'taxonomic_profile', category)
-        tax_file = merging_abundance(taxo_dir, sampleseq)
+        taxo_dir = os.path.join(process_dir, category)
+        util.create_dir(taxo_dir)
+        tax_file = merging_abundance(taxo_out_dir, taxo_dir, samples)
         tax_bining = separate_taxrank(taxo_dir, tax_file)
 
         if os.path.isfile(metafile):  
-            metadata = pd.read_csv(metafile, sep='\t', index_col=sampleid).loc[sampleseq, column_name]
+            metadata = pd.read_csv(metafile, sep='\t', index_col=sampleid).loc[samples, column_name]
         else:
             metadata = 'no_metadata'
         print(metadata)

@@ -1,11 +1,9 @@
 #!/user/bin/env python3
 
 import os
-import multiprocessing as mp
 import pandas as pd
 
-import util, mapping
-import pre_execution_stats as stats
+import util
 
 
 #------------------------------------------------------------------------------------
@@ -22,33 +20,10 @@ def count_distribution(sample, fwd, rev, process_dir):
 
 
 #------------------------------------------------------------------------------------
-# Compute the histogram of the read counts
+# Main function for pre-processing
 #------------------------------------------------------------------------------------
-def pre_process_parallel(item):
+def run_pre_processing(item):
     sample, fwd, rev, process_dir = item
     count_distribution(sample, fwd, rev, process_dir)
     output_dir = os.path.join(process_dir, 'fastqc')
     util.call_fastqc([fwd, rev], output_dir)
-    stats.qcheck_stats(process_dir)
-
-
-#------------------------------------------------------------------------------------
-# Main function for pre-processing
-#------------------------------------------------------------------------------------
-def run_pre_processing(process_dir):
-    mapping_file = mapping.read_mapping(process_dir)
-
-    item = []
-    for idx in mapping_file.index:
-        sample = mapping_file.loc[idx, 'SampleID']
-        fwd = mapping_file.loc[idx, 'Forward_read']
-        rev = mapping_file.loc[idx, 'Reverse_read']
-        item.append([sample, fwd, rev, process_dir])
-    # Number of Parallel processing
-    pool = mp.Pool(min(int(mp.cpu_count()/2), len(item)))
-
-    # parallel execution of pre-execution
-    result = pool.map(pre_process_parallel, item)
-    print(result)
-    # pre-execution report
-    stats.qcheck_stats(process_dir)

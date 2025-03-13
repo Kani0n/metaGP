@@ -9,11 +9,9 @@ import functional_profiling_stats as stats
 
 
 def concat_pairs(sample, fwd, rev, output_dir):
+    
     # concatenate pair-end reads
-    concat_dir = os.path.join(output_dir, sample)
-    util.create_dir(concat_dir)
-
-    concat_pair = os.path.join(concat_dir, sample + '.fastq')
+    concat_pair = os.path.join(output_dir, sample + '.fastq')
     if fwd.endswith('.gz') and rev.endswith('.gz'): 
         cmd = 'zcat ' + fwd + ' ' + rev + ' > ' + concat_pair
     else:
@@ -44,7 +42,7 @@ def exec_humann(concat_file, config_file):
     os.system(cmd)
 
 
-def functional_profiling_parallel(item):
+def run_functional_profiling(item):
     sample, fwd, rev, process_dir = item
     config_file = config.read_config(process_dir)
 
@@ -53,23 +51,3 @@ def functional_profiling_parallel(item):
 
     concat_file = concat_pairs(sample, fwd, rev, output_dir)
     exec_humann(concat_file, config_file)
-
-
-def run_functional_profiling(process_dir):
-    df_mapping = util.adjust_paths(pd.read_csv(os.path.join(process_dir, 'quality_control', 'samples_to_process.tab'), sep='\t'), process_dir)
-    config_file = config.read_config(process_dir)
-
-    # list of samples
-    item = []
-    for idx in df_mapping.index:
-        sample = df_mapping.loc[idx,'SampleID']
-        fwd = df_mapping.loc[idx,'Forward_read']
-        rev = df_mapping.loc[idx,'Reverse_read']
-        item.append([sample, fwd, rev, config_file, process_dir])
-    # Number of Parallel processing
-    pool = mp.Pool(min(int(mp.cpu_count()/2),len(item)))
-    # parallel execution of functional_profile
-    result = pool.map(functional_profiling_parallel, item)
-    print(result)
-    # functional_profiling report
-    stats.funcprof_stats(process_dir, df_mapping['SampleID'].to_list())
