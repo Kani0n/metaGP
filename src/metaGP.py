@@ -49,6 +49,9 @@ parser.add_argument('-f', '--fwd', dest='fwd', type=str,
 parser.add_argument('-r', '--rev', dest='rev', type=str,
                     help='Path to reverse read file.')
 
+parser.add_argument('-n', '--nCores', dest='nCores', type=str,
+                    help='Number of cores.')
+
 args = parser.parse_args()
 
 MAPPING = args.mapping_exec
@@ -73,6 +76,8 @@ sample = args.sample
 fwd = args.fwd
 rev = args.rev
 
+nCores = args.nCores
+
 pd.set_option('display.max_colwidth', None)
 
 if MAPPING:
@@ -80,20 +85,21 @@ if MAPPING:
 elif CONFIG:
     config.make_config(project_dir, input_dir)
 elif PRE:
-    pre_execution.run_pre_processing([sample, fwd, rev, process_dir])
+    pre_execution.run_pre_processing(sample, fwd, rev, process_dir)
 elif PRES:
     pre_execution_stats.qcheck_stats(mapping_file, process_dir, output_dir)
 elif QC:
-    quality_control.run_quality_control([sample, fwd, rev, process_dir])
+    quality_control.run_quality_control(sample, fwd, rev, process_dir)
 elif QCS:
     quality_control_stats.qcheck_stats(mapping_file, process_dir, output_dir)
 elif TAXO:
-    taxonomy_profiling.run_taxonomy_profiling([sample, fwd, rev, process_dir])
+    taxonomy_profiling.run_taxonomy_profiling(sample, fwd, rev, process_dir, nCores)
 elif TAXOS:
     taxonomy_profiling_stats.taxoprof_stats(mapping_file, process_dir, output_dir)
 elif DIV:
     diversity_execution.run_diversity_execution(process_dir)
 elif FUNC:
-    functional_profiling.run_functional_profiling([sample, fwd, rev, process_dir])
+    # functional_profiling.run_functional_profiling(sample, fwd, rev, process_dir, nCores)
+    functional_profiling.run_functional_profiling(mapping_file, process_dir, nCores)
 elif FUNCS:
     functional_profiling_stats.funcprof_stats(mapping_file, process_dir, output_dir)

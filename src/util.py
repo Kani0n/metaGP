@@ -51,11 +51,13 @@ def call_fastqc(files, output_dir):
 #------------------------------------------------------------------------------------
 # Adjusts fastq filepaths from a work dir to a published dir
 #------------------------------------------------------------------------------------
-def adjust_paths(df_mapping, process_dir):
+def adjust_paths(df_mapping, output_dir):
     for read in ['Forward_read', 'Reverse_read']:
         new_paths = []
         for path in df_mapping[read]:
-            filename = os.path.basename(path)
-            new_paths.append(os.path.join(process_dir, 'decontamination', filename))
+            filename = str(os.path.basename(path))
+            pieces = filename.split('_')
+            sample = pieces[0] + '_' + pieces[1]
+            new_paths.append(os.path.join(output_dir, 'qc', sample, 'decontamination', filename))
         df_mapping[read] = new_paths
     return df_mapping

@@ -6,7 +6,7 @@ import os
 import util, config
     
 
-def exec_metaphlan(sample, fwd, rev, config_file, process_dir, category, del_bowtieout):
+def exec_metaphlan(sample, fwd, rev, config_file, process_dir, category, nCores):
     # metaphlan without usgbs or with usgbs
     samdir = os.path.join(process_dir, category, 'sam')
     bowtiedir = os.path.join(process_dir, category, 'bowtie2')
@@ -32,19 +32,11 @@ def exec_metaphlan(sample, fwd, rev, config_file, process_dir, category, del_bow
     cmd += ' -s ' + samout + ' --bowtie2db ' + taxonomy_db + ' -x ' + taxonomy_index + ' --bowtie2out ' + bowtieout + ' --nproc 16 -t rel_ab_w_read_stats'
     if category == 'ignore_usgbs':
         cmd += ' --ignore_usgbs'
+    cmd += ' --nproc ' + nCores
     os.system(cmd)
-    if del_bowtieout:
-        os.remove(bowtieout)
 
 
-def run_taxonomy_profiling(item):
-    sample, fwd, rev, process_dir = item
+def run_taxonomy_profiling(sample, fwd, rev, process_dir, nCores):
     config_file = config.read_config(process_dir)
-
-    categories = []
     for category in ['ignore_usgb','usgb']:
-        categories.append([sample, fwd, rev, config_file, process_dir, category, False])
-    pool = mp.Pool(min(int(mp.cpu_count()/2), len(categories)))
-    # parallel execution of taxonomy_profiling
-    result = pool.map(exec_metaphlan, categories)
-    print(result)
+        exec_metaphlan(sample, fwd, rev, config_file, process_dir, category, nCores)

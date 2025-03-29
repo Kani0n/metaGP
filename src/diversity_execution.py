@@ -188,6 +188,9 @@ def compute_beta_diversity(abundance_file, metafile, sample, column, outdir):
 
 
 def run_diversity_execution(process_dir):
+    util.create_dir(os.path.join(process_dir, 'diversity'))
+    return
+
     config_file = config.read_config(process_dir)
 
     tax_lbl_for_diversity = config.read_from_config(config_file, 'Diversity', 'tax_lbl_for_diversity')

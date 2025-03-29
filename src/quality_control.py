@@ -94,8 +94,7 @@ def call_kneaddata(fwd, rev, output_dir, config_file, bypass_trf):
     return  [repeat_fwd, repeat_rev, trim_fwd, trim_rev, human_contam_fwd, human_contam_rev, mouse_contam_fwd, mouse_contam_rev, out_fwd_file, out_rev_file]
 
 
-def run_quality_control(item):
-    sample, fwd, rev, process_dir = item
+def run_quality_control(sample, fwd, rev, process_dir):
     config_file = config.read_config(process_dir)
     
     report = []

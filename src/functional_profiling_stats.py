@@ -29,35 +29,36 @@ def funcprof_stats(mapping_file, process_dir, output_dir):
     # join genefamilies
     cmd = 'humann_join_tables --input ' + func_dir + ' --output ' + os.path.join(func_dir, 'genefamilies.tsv') + ' --file_name genefamilies'
     print(cmd)
-    os.system(cmd)
+    #os.system(cmd)
     # normalize genefamilies
     cmd = 'humann_renorm_table --input ' + os.path.join(func_dir, 'genefamilies.tsv') + ' --units cpm --special n --output ' + os.path.join(func_dir, 'genefamilies_cpm.tsv')
     print(cmd)
-    os.system(cmd)
+    #os.system(cmd)
     cmd = 'humann_renorm_table --input ' + os.path.join(func_dir, 'genefamilies.tsv') + ' --units relab --special n --output ' + os.path.join(func_dir, 'genefamilies_relab.tsv')
     print(cmd)
-    os.system(cmd)
+    #os.system(cmd)
     # join pathabundance
     cmd = 'humann_join_tables --input ' + func_dir + ' --output ' + os.path.join(func_dir, 'pathabundance.tsv') + ' --file_name pathabundance'
     print(cmd)
-    os.system(cmd)
+    #os.system(cmd)
     # normalize pathabundance
     cmd = 'humann_renorm_table --input ' + os.path.join(func_dir, 'pathabundance.tsv') + ' --units cpm --special n --output ' + os.path.join(func_dir, 'pathabundance_cpm.tsv')
     print(cmd)
-    os.system(cmd)
+    #os.system(cmd)
     cmd = 'humann_renorm_table --input ' + os.path.join(func_dir, 'pathabundance.tsv') + ' --units relab --special n --output ' + os.path.join(func_dir, 'pathabundance_relab.tsv')
     print(cmd)
-    os.system(cmd)
+    #os.system(cmd)
     # join pathcoverage
     cmd = 'humann_join_tables --input ' + func_dir + ' --output ' + os.path.join(func_dir, 'pathcoverage.tsv') + ' --file_name pathcoverage'
     print(cmd)
-    os.system(cmd)
+    #os.system(cmd)
     # normalize pathabundance
     cmd = 'humann_renorm_table --input ' + os.path.join(func_dir, 'pathcoverage.tsv') + ' --units cpm --special n --output ' + os.path.join(func_dir, 'pathcoverage_cpm.tsv')
     print(cmd)
-    os.system(cmd)
+    #os.system(cmd)
     cmd = 'humann_renorm_table --input ' + os.path.join(func_dir, 'pathcoverage.tsv') + ' --units relab --special n --output ' + os.path.join(func_dir, 'pathcoverage_relab.tsv')
     print(cmd)
-    os.system(cmd)
-    for f in prof_files:
-        os.system('rm ' + f)
+    #os.system(cmd)
+    
+    # for f in prof_files:
+    #     os.system('rm ' + f)

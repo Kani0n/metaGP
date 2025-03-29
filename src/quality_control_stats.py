@@ -6,13 +6,13 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 
-import config
+import config, util
 
 
 #------------------------------------------------------------------------------------
 # Merge the statistic files. The statistic files endswith '.stat' 
 #------------------------------------------------------------------------------------
-def merge_stats(qc_out_dir, process_dir, min_readcount):
+def merge_stats(qc_out_dir, process_dir, min_readcount, output_dir):
     frames = []
     count = 0
     for root, dirs, files in os.walk(qc_out_dir):
@@ -55,6 +55,7 @@ def merge_stats(qc_out_dir, process_dir, min_readcount):
     df_keep = df_keep[['Num', 'SampleID', 'Kneaddata_F', 'Kneaddata_R']]
     df_keep = df_keep.rename(columns={'Kneaddata_F':'Forward_read',
                                       'Kneaddata_R':'Reverse_read'})
+    df_keep = util.adjust_paths(df_keep, output_dir)
     df_keep.to_csv(os.path.join(process_dir, 'samples_to_process.tab'), sep='\t', index=None)
     return outfile
 
@@ -102,6 +103,6 @@ def qcheck_stats(mapping_file, process_dir, output_dir):
     config_file = config.read_config(process_dir)
     min_readcount = int(config.read_from_config(config_file, 'QA', 'min_readcount'))
 
-    statfile = merge_stats(qc_out_dir, process_dir, min_readcount)
+    statfile = merge_stats(qc_out_dir, process_dir, min_readcount, output_dir)
     figname = os.path.join(process_dir, 'readcounts.png')
     barplot(statfile, figname)

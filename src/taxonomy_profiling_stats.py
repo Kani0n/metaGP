@@ -9,11 +9,11 @@ import seaborn as sns
 import util, config
 
 
-def merging_abundance(taxo_out_dir, taxo_dir, samples):
+def merging_abundance(taxo_out_dir, category, taxo_dir, samples):
     tax_file = os.path.join(taxo_dir, 'OTUtable.rel_abundance.tab')
     filelist = ''
     for s in samples:
-        filelist += os.path.join(taxo_out_dir, s, 'profiles', s + '.txt') + ' '
+        filelist += os.path.join(taxo_out_dir, s, category, 'profiles', s + '.txt') + ' '
     cmd = 'merge_metaphlan_tables.py ' + filelist + ' > ' + tax_file
     os.system(cmd)
     df_merged = pd.read_csv(tax_file, sep='\t', comment="#")
@@ -157,7 +157,7 @@ def taxoprof_stats(mapping_file, process_dir, output_dir):
     for category in ['ignore_usgb','usgb']:
         taxo_dir = os.path.join(process_dir, category)
         util.create_dir(taxo_dir)
-        tax_file = merging_abundance(taxo_out_dir, taxo_dir, samples)
+        tax_file = merging_abundance(taxo_out_dir, category, taxo_dir, samples)
         tax_bining = separate_taxrank(taxo_dir, tax_file)
 
         if os.path.isfile(metafile):  

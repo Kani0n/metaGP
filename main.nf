@@ -1,20 +1,11 @@
 #!/usr/bin/env nextflow
 
+
+params.nCores = 4
+def nCores = "${params.nCores}"
 def input_dir = "${params.i}"
 def output_dir = "${params.o}"
 
-process make_mapping_file {
-
-    publishDir "${output_dir}/mapping", mode: 'copy'
-    
-    output:
-        file('mapping.tab') 
-
-    script:
-    """
-    python3 ${projectDir}/src/metaGP.py --mapping -p \$PWD -i ${input_dir}
-    """
-}
 
 process make_config_file {
 
@@ -29,6 +20,19 @@ process make_config_file {
     """
 }
 
+process make_mapping_file {
+
+    publishDir "${output_dir}/mapping", mode: 'copy'
+    
+    output:
+        file('mapping.tab') 
+
+    script:
+    """
+    python3 ${projectDir}/src/metaGP.py --mapping -p \$PWD -i ${input_dir}
+    """
+}
+
 process preprocessing {
 
     tag "${SampleID}"
@@ -39,7 +43,8 @@ process preprocessing {
         tuple val(Num), val(SampleID), path(Forward_read), path(Reverse_read)
 
     output:
-        tuple path('stats'), path('fastqc')
+        path('stats')
+        path('fastqc')
 
     script:
     """
@@ -75,7 +80,10 @@ process quality_control {
         tuple val(Num), val(SampleID), path(Forward_read), path(Reverse_read)
 
     output:
-        tuple path('remove_blankspace'), path('adapter_trimming'), path('decontamination'), path('stats')
+        path('remove_blankspace')
+        path('adapter_trimming')
+        path('decontamination')
+        path('stats')
 
     script:
     """
@@ -112,11 +120,12 @@ process taxonomy_profiling {
         tuple val(Num), val(SampleID), path(Forward_read), path(Reverse_read)
 
     output:
-        tuple path('sam'), path('bowtie2'), path('profiles')
+        path('ignore_usgb')
+        path('usgb')
 
     script:
     """
-    python3 ${projectDir}/src/metaGP.py --taxo -p \$PWD -s ${SampleID} -f ${Forward_read} -r ${Reverse_read}
+    python3 ${projectDir}/src/metaGP.py --taxo -p \$PWD -s ${SampleID} -f ${Forward_read} -r ${Reverse_read} -n ${nCores}
     """
 }
 
@@ -146,18 +155,19 @@ process diversity_computation {
 
     input:
         file(config)
-        path(taxo)
-        tuple val(Num), val(SampleID), path(Forward_read), path(Reverse_read)
+        path('ignore_usgb')
+        path('usgb')
 
     output:
-        path 'diversity'
+        path('diversity')
 
     script:
     """
-    python3 ${projectDir}/src/metaGP.py --div -p \$PWD -s ${SampleID} -f ${Forward_read} -r ${Reverse_read}
+    python3 ${projectDir}/src/metaGP.py --div -p \$PWD
     """
 }
 
+/*
 process functional_profiling {
 
     tag "${SampleID}"
@@ -166,6 +176,8 @@ process functional_profiling {
 
     input:
         file(config)
+        path('ignore_usgb')
+        path('usgb')
         tuple val(Num), val(SampleID), path(Forward_read), path(Reverse_read)
 
     output:
@@ -173,7 +185,27 @@ process functional_profiling {
 
     script:
     """
-    python3 ${projectDir}/src/metaGP.py --func -p \$PWD -s ${SampleID} -f ${Forward_read} -r ${Reverse_read}
+    python3 ${projectDir}/src/metaGP.py --func -p \$PWD -s ${SampleID} -f ${Forward_read} -r ${Reverse_read} -n ${nCores}
+    """
+}
+*/
+
+process functional_profiling {
+
+    publishDir "${output_dir}/func", mode: 'copy'
+
+    input:
+        file(config)
+        path('ignore_usgb')
+        path('usgb')
+        file(mapping)
+
+    output:
+        path('functional_profile')
+
+    script:
+    """
+    python3 ${projectDir}/src/metaGP.py --func -p \$PWD -m ${mapping}
     """
 }
 
@@ -182,11 +214,12 @@ process functional_profiling_stats {
     publishDir "${output_dir}/func_stats", mode: 'copy'
 
     input:
+        path('ignore_usgb')
+        path('usgb')
         file(mapping)
 
     output:
-        path('ignore_usgb')
-        path('usgb')
+        path('profiles')
 
     script:
     """
@@ -196,8 +229,8 @@ process functional_profiling_stats {
 
 workflow {
     
-    make_mapping_file()
     make_config_file()
+    make_mapping_file()
     preprocessing(make_mapping_file.out
                     .splitCsv(header: ['Num', 'SampleID', 'Forward_read', 'Reverse_read'], sep: '\t', skip: 1)
                     .map{ row -> tuple(row.Num, row.SampleID, row.Forward_read, row.Reverse_read)})
@@ -211,17 +244,20 @@ workflow {
                        quality_control_stats.out[1]
                         .splitCsv(header: ['Num', 'SampleID', 'Forward_read', 'Reverse_read'], sep: '\t', skip: 1)
                         .map{ row -> tuple(row.Num, row.SampleID, row.Forward_read, row.Reverse_read)})
-    taxonomy_profiling_stats(make_config_file.out, quality_control_stats.out[1])
-    /*
+    taxonomy_profiling_stats(make_config_file.out,
+                             quality_control_stats.out[1])
     diversity_computation(make_config_file.out,
-                          taxonomy_profiling.out,
-                          quality_control.out[0]
-                            .splitCsv(header: ['Num', 'SampleID', 'Forward_read', 'Reverse_read'], sep: '\t', skip: 1)
-                            .map{ row -> tuple(row.Num, row.SampleID, row.Forward_read, row.Reverse_read)})
-    */
+                          taxonomy_profiling.out)
     functional_profiling(make_config_file.out,
+                         taxonomy_profiling_stats.out,
+                         quality_control_stats.out[1])
+    /*
+    functional_profiling(make_config_file.out,
+                         taxonomy_profiling_stats.out,
                          quality_control_stats.out[1]
                             .splitCsv(header: ['Num', 'SampleID', 'Forward_read', 'Reverse_read'], sep: '\t', skip: 1)
                             .map{ row -> tuple(row.Num, row.SampleID, row.Forward_read, row.Reverse_read)})
-    functional_profiling_stats(quality_control_stats.out[1])
+    */
+    functional_profiling_stats(taxonomy_profiling_stats.out,
+                               quality_control_stats.out[1])
 }

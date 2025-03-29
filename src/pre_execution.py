@@ -22,8 +22,7 @@ def count_distribution(sample, fwd, rev, process_dir):
 #------------------------------------------------------------------------------------
 # Main function for pre-processing
 #------------------------------------------------------------------------------------
-def run_pre_processing(item):
-    sample, fwd, rev, process_dir = item
+def run_pre_processing(sample, fwd, rev, process_dir):
     count_distribution(sample, fwd, rev, process_dir)
     output_dir = os.path.join(process_dir, 'fastqc')
     util.call_fastqc([fwd, rev], output_dir)
