@@ -14,6 +14,16 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
+    -n|--nCores)
+      nCORES="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    -p|--nParallel)
+      nPARALLEL="$2"
+      shift # past argument
+      shift # past value
+      ;;
     -*|--*)
       echo "Unknown option $1"
       exit 1
@@ -27,6 +37,8 @@ done
 
 echo "INPUT DIR: ${INPUT}"
 echo "OUTPUT DIR: ${OUTPUT}"
+echo "NUMBER OF CORES: ${nCORES}"
+echo "NUMBER OF PARALLEL PROCESSES: ${nPARALLEL}"
 #echo "Building Docker..."
 #docker build -t metagp .
 #docker run --name metagp -d -i -t -v ${INPUT}:/data metagp
@@ -41,4 +53,4 @@ fi
 conda activate metaGP
 
 echo "STARTING..."
-nextflow run main.nf --i ${INPUT} --o ${OUTPUT}
+nextflow run main.nf --i ${INPUT} --o ${OUTPUT} --n ${nCORES} --np ${nPARALLEL}

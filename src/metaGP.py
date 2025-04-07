@@ -49,8 +49,10 @@ parser.add_argument('-f', '--fwd', dest='fwd', type=str,
 parser.add_argument('-r', '--rev', dest='rev', type=str,
                     help='Path to reverse read file.')
 
-parser.add_argument('-n', '--nCores', dest='nCores', type=str,
+parser.add_argument('-n', '--nCores', dest='nCores', type=int,
                     help='Number of cores.')
+parser.add_argument('-np', '--nParallel', dest='nParallel', type=int,
+                    help='Number of parallel processes in functional profiling.')
 
 args = parser.parse_args()
 
@@ -77,6 +79,7 @@ fwd = args.fwd
 rev = args.rev
 
 nCores = args.nCores
+nParallel = args.nParallel
 
 pd.set_option('display.max_colwidth', None)
 
@@ -97,9 +100,9 @@ elif TAXO:
 elif TAXOS:
     taxonomy_profiling_stats.taxoprof_stats(mapping_file, process_dir, output_dir)
 elif DIV:
-    diversity_execution.run_diversity_execution(process_dir)
+    diversity_execution.run_diversity_execution(process_dir, output_dir)
 elif FUNC:
     # functional_profiling.run_functional_profiling(sample, fwd, rev, process_dir, nCores)
-    functional_profiling.run_functional_profiling(mapping_file, process_dir, nCores)
+    functional_profiling.run_functional_profiling(mapping_file, process_dir, nCores, nParallel)
 elif FUNCS:
     functional_profiling_stats.funcprof_stats(mapping_file, process_dir, output_dir)

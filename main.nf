@@ -1,8 +1,10 @@
 #!/usr/bin/env nextflow
 
 
-params.nCores = 4
-def nCores = "${params.nCores}"
+params.n = 4
+params.np = 8
+def nCores = "${params.n}"
+def nParallel = "${params.np}"
 def input_dir = "${params.i}"
 def output_dir = "${params.o}"
 
@@ -149,9 +151,7 @@ process taxonomy_profiling_stats {
 
 process diversity_computation {
 
-    tag "${SampleID}"
-
-    publishDir "${output_dir}/div/${SampleID}", mode: 'copy'
+    publishDir "${output_dir}/div", mode: 'copy'
 
     input:
         file(config)
@@ -163,7 +163,7 @@ process diversity_computation {
 
     script:
     """
-    python3 ${projectDir}/src/metaGP.py --div -p \$PWD
+    python3 ${projectDir}/src/metaGP.py --div -p \$PWD -o ${output_dir}
     """
 }
 
@@ -205,7 +205,7 @@ process functional_profiling {
 
     script:
     """
-    python3 ${projectDir}/src/metaGP.py --func -p \$PWD -m ${mapping}
+    python3 ${projectDir}/src/metaGP.py --func -p \$PWD -m ${mapping} -n ${nCores} -np ${nParallel}
     """
 }
 
@@ -231,6 +231,7 @@ workflow {
     
     make_config_file()
     make_mapping_file()
+    /*
     preprocessing(make_mapping_file.out
                     .splitCsv(header: ['Num', 'SampleID', 'Forward_read', 'Reverse_read'], sep: '\t', skip: 1)
                     .map{ row -> tuple(row.Num, row.SampleID, row.Forward_read, row.Reverse_read)})
@@ -239,15 +240,19 @@ workflow {
                     make_mapping_file.out
                         .splitCsv(header: ['Num', 'SampleID', 'Forward_read', 'Reverse_read'], sep: '\t', skip: 1)
                         .map{ row -> tuple(row.Num, row.SampleID, row.Forward_read, row.Reverse_read)})
+    */
     quality_control_stats(make_config_file.out, make_mapping_file.out)
+    /*
     taxonomy_profiling(make_config_file.out,
                        quality_control_stats.out[1]
                         .splitCsv(header: ['Num', 'SampleID', 'Forward_read', 'Reverse_read'], sep: '\t', skip: 1)
                         .map{ row -> tuple(row.Num, row.SampleID, row.Forward_read, row.Reverse_read)})
+    */
     taxonomy_profiling_stats(make_config_file.out,
                              quality_control_stats.out[1])
     diversity_computation(make_config_file.out,
-                          taxonomy_profiling.out)
+                          taxonomy_profiling_stats.out)
+    /*
     functional_profiling(make_config_file.out,
                          taxonomy_profiling_stats.out,
                          quality_control_stats.out[1])
@@ -257,7 +262,7 @@ workflow {
                          quality_control_stats.out[1]
                             .splitCsv(header: ['Num', 'SampleID', 'Forward_read', 'Reverse_read'], sep: '\t', skip: 1)
                             .map{ row -> tuple(row.Num, row.SampleID, row.Forward_read, row.Reverse_read)})
-    */
     functional_profiling_stats(taxonomy_profiling_stats.out,
                                quality_control_stats.out[1])
+    */
 }

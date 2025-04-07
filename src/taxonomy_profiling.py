@@ -32,7 +32,7 @@ def exec_metaphlan(sample, fwd, rev, config_file, process_dir, category, nCores)
     cmd += ' -s ' + samout + ' --bowtie2db ' + taxonomy_db + ' -x ' + taxonomy_index + ' --bowtie2out ' + bowtieout + ' --nproc 16 -t rel_ab_w_read_stats'
     if category == 'ignore_usgbs':
         cmd += ' --ignore_usgbs'
-    cmd += ' --nproc ' + nCores
+    cmd += ' --nproc ' + str(nCores)
     os.system(cmd)
 
 

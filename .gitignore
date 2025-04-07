@@ -2,12 +2,6 @@
 .nextflow*
 work/
 src/__pycache__/
-config/
-mapping/
-pre/
-qc/
-taxo/
-div/
-func/
 static/
 out/
+out2/

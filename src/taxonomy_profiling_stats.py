@@ -161,7 +161,7 @@ def taxoprof_stats(mapping_file, process_dir, output_dir):
         tax_bining = separate_taxrank(taxo_dir, tax_file)
 
         if os.path.isfile(metafile):  
-            metadata = pd.read_csv(metafile, sep='\t', index_col=sampleid).loc[samples, column_name]
+            metadata = pd.read_csv(metafile, sep=',', index_col=sampleid).loc[samples, column_name]
         else:
             metadata = 'no_metadata'
         print(metadata)

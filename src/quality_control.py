@@ -61,7 +61,7 @@ def call_kneaddata(fwd, rev, output_dir, config_file, bypass_trf):
         cmd += ' --run-trim-repetitive --trf /mnt/main_hdd/miniconda3/envs/metaGP/bin/'
     cmd += ' --fastqc /mnt/main_hdd/miniconda3/envs/metaGP/bin/fastqc'
     cmd += ' --bowtie2 /mnt/main_hdd/miniconda3/envs/metaGP/bin/'
-    cmd += ' --bowtie2-options="--quiet" --bowtie2-options="--threads 24" --processes 16 --threads 2'
+    cmd += ' --bowtie2-options="--quiet" --bowtie2-options="--threads 4" --processes 4 --threads 2'
     os.system(cmd)
 
     fwd_filename = os.path.split(fwd)[-1]

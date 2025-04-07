@@ -55,9 +55,9 @@ def make_config(project_dir, input_dir):
     taxo_idx = 'mpa_vOct22_CHOCOPhlAnSGB_202212'
     abundance = 0.2
     prevalence = 30.5
-    metafile = '/path/to/the/metafile'
-    samplecol = 'column_name_of_samples'
-    metacol = 'column_name_of_metainfo'
+    metafile = '/mnt/main_hdd/ge52qoh/DATA/BB4387/Stuhlproben_Algenstudie_sequencing_1.csv'
+    samplecol = 'Sample'
+    metacol = 'Treatment'
     taxlbl = 'g'
     nt_db = os.path.join(project_dir, 'static/database/bowtie2db/mpa_vOct22_CHOCOPhlAnSGB_202212')
     pro_db = os.path.join(project_dir, 'static/database/protein_db/uniref')

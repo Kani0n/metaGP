@@ -78,7 +78,7 @@ def compute_alpha_diversity(abundance_file, metafile, sample, column, outdir):
     df.to_csv(os.path.join(outdir, 'alpha_diversity.tab'), sep='\t')
     #return  
     # Metadata
-    df_metainfo = pd.read_csv(metafile, sep='\t').set_index(sample)
+    df_metainfo = pd.read_csv(metafile, sep=',').set_index(sample)
     df['subject'] = df_metainfo[column]
     print(df_metainfo[column])
     pairs = list(combinations(df['subject'].unique(), 2))
@@ -160,7 +160,7 @@ def compute_beta_diversity(abundance_file, metafile, sample, column, outdir):
     # Bray-Curtis
     beta_diversity = skbio.diversity.beta_diversity("braycurtis", abun_tab, ids)
     # Metadata
-    df_metainfo = pd.read_csv(metafile, sep='t').set_index(sample)
+    df_metainfo = pd.read_csv(metafile, sep=',').set_index(sample)
     df_metainfo = df_metainfo.loc[ids,:]
     unique_grp = df_metainfo[column].unique()
 
@@ -187,10 +187,7 @@ def compute_beta_diversity(abundance_file, metafile, sample, column, outdir):
     plt.savefig(os.path.join(outdir, 'pcoa.png'), dpi=200, bbox_inches='tight')
 
 
-def run_diversity_execution(process_dir):
-    util.create_dir(os.path.join(process_dir, 'diversity'))
-    return
-
+def run_diversity_execution(process_dir, output_dir):
     config_file = config.read_config(process_dir)
 
     tax_lbl_for_diversity = config.read_from_config(config_file, 'Diversity', 'tax_lbl_for_diversity')
@@ -202,21 +199,22 @@ def run_diversity_execution(process_dir):
     preval = float(config.read_from_config(config_file, 'Diversity', 'prevalent_cutoff'))
     
     for category in ['ignore_usgb', 'usgb']:
-        taxprof = os.path.join(process_dir, 'taxonomic_profile', category, 'Taxonomic_binning', taxofile)
+        taxprof = os.path.join(output_dir, 'taxo_stats', category, 'Taxonomic_binning', taxofile)
 
         # Filtering based on abundace and prevalence
-        output_dir = os.path.join(process_dir, 'diversity', 'filtered_taxprof', category)
-        util.create_dir(output_dir)
-        fitered_taxprof = os.path.join(output_dir, os.path.basename(taxprof))
+        diversity_dir = os.path.join(process_dir, 'diversity')
+        filtered_taxo_dir = os.path.join(diversity_dir, 'filtered_taxprof', category)
+        util.create_dir(filtered_taxo_dir)
+        fitered_taxprof = os.path.join(filtered_taxo_dir, os.path.basename(taxprof))
         fiter_taxprof(taxprof, abund, preval, fitered_taxprof)
         # Alpha diversity
-        output_dir = os.path.join(process_dir, 'diversity', 'alpha_diversity', category)
-        util.create_dir(output_dir)
-        compute_alpha_diversity(fitered_taxprof, metafile, sample, metacol, output_dir)
+        alpha_dir = os.path.join(diversity_dir, 'alpha_diversity', category)
+        util.create_dir(alpha_dir)
+        compute_alpha_diversity(fitered_taxprof, metafile, sample, metacol, alpha_dir)
         if os.path.isfile(metafile):
             # Beta diversity
-            output_dir = os.path.join(process_dir, 'diversity', 'beta_diversity', category)
-            util.create_dir(output_dir)
-            compute_beta_diversity(fitered_taxprof, metafile, sample, metacol, output_dir)
+            beta_dir = os.path.join(diversity_dir, 'beta_diversity', category)
+            util.create_dir(beta_dir)
+            compute_beta_diversity(fitered_taxprof, metafile, sample, metacol, beta_dir)
         else:
             print('Metafile not found. Diversity not computed')
