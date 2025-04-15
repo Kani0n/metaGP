@@ -199,6 +199,11 @@ def run_diversity_execution(process_dir, output_dir):
     abund = float(config.read_from_config(config_file, 'Diversity', 'abundace_cutoff'))
     preval = float(config.read_from_config(config_file, 'Diversity', 'prevalent_cutoff'))
     
+    if not os.path.isfile(metafile):
+        util.create_dir(os.path.join(process_dir, 'diversity'))
+        print('Metafile not found. Diversity not computed')
+        return
+
     for category in ['ignore_usgb', 'usgb']:
         taxprof = os.path.join(output_dir, 'taxo_stats', category, 'Taxonomic_binning', taxofile)
 
@@ -212,10 +217,7 @@ def run_diversity_execution(process_dir, output_dir):
         alpha_dir = os.path.join(diversity_dir, 'alpha_diversity', category)
         util.create_dir(alpha_dir)
         compute_alpha_diversity(fitered_taxprof, metafile, meta_sep, sample, metacol, alpha_dir)
-        if os.path.isfile(metafile):
-            # Beta diversity
-            beta_dir = os.path.join(diversity_dir, 'beta_diversity', category)
-            util.create_dir(beta_dir)
-            compute_beta_diversity(fitered_taxprof, metafile, meta_sep, sample, metacol, beta_dir)
-        else:
-            print('Metafile not found. Diversity not computed')
+        # Beta diversity
+        beta_dir = os.path.join(diversity_dir, 'beta_diversity', category)
+        util.create_dir(beta_dir)
+        compute_beta_diversity(fitered_taxprof, metafile, meta_sep, sample, metacol, beta_dir)
