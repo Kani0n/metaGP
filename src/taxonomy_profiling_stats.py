@@ -11,15 +11,21 @@ import util, config
 
 def merging_abundance(taxo_out_dir, category, taxo_dir, samples):
     tax_file = os.path.join(taxo_dir, 'OTUtable.rel_abundance.tab')
-    filelist = ''
+    files = ''
+    remaining_samples = []
     for s in samples:
-        filelist += os.path.join(taxo_out_dir, s, category, 'profiles', s + '.txt') + ' '
-    cmd = 'merge_metaphlan_tables.py ' + filelist + ' > ' + tax_file
+        file = os.path.join(taxo_out_dir, s, category, 'profiles', s + '.txt')
+        if os.path.isfile(file):
+            files += file + ' '
+            remaining_samples.append(s)
+    if files == '':
+        return None, remaining_samples
+    cmd = 'merge_metaphlan_tables.py ' + files + ' > ' + tax_file
     os.system(cmd)
     df_merged = pd.read_csv(tax_file, sep='\t', comment="#")
-    df_merged = df_merged.set_index('clade_name')[samples]
+    df_merged = df_merged.set_index('clade_name')[remaining_samples]
     df_merged.to_csv(tax_file, sep='\t')
-    return tax_file
+    return tax_file, remaining_samples
 
 
 def separate_taxrank(taxo_dir, merged_file):
@@ -97,7 +103,8 @@ def plot_relabundance(abun_file, show_top_n, show_abundant, metadata):
     top = abun_tab.nlargest(show_top_n, 'avg').index.to_list()
     show_taxa = list(set(high_abund).intersection(set(top)))
     df1 = abun_tab.loc[show_taxa].sort_values(by=show_taxa, ascending=[True] * len(show_taxa), axis=1)
-    df1.loc['others'] = abun_tab.loc[list(set(abun_tab.index.to_list()).difference(show_taxa)),:].sum(axis='index').to_list()
+    others = abun_tab.loc[list(set(abun_tab.index.to_list()).difference(show_taxa)),:]
+    df1.loc['others'] = others.sum(numeric_only=True, axis=0)
     df1 = df1.drop(columns='avg')
     df1 = df1.T
 
@@ -145,6 +152,7 @@ def plot_relabundance(abun_file, show_top_n, show_abundant, metadata):
 def taxoprof_stats(mapping_file, process_dir, output_dir):
     config_file = config.read_config(process_dir)
     metafile = config.read_from_config(config_file, 'Diversity', 'metafile_for_diversity')
+    meta_sep = config.read_from_config(config_file, 'Diversity', 'seperator_for_metafile')
     sampleid = config.read_from_config(config_file, 'Diversity', 'metafile_sampleid')
     column_name = config.read_from_config(config_file, 'Diversity', 'metafile_category')
 
@@ -157,14 +165,15 @@ def taxoprof_stats(mapping_file, process_dir, output_dir):
     for category in ['ignore_usgb','usgb']:
         taxo_dir = os.path.join(process_dir, category)
         util.create_dir(taxo_dir)
-        tax_file = merging_abundance(taxo_out_dir, category, taxo_dir, samples)
+        tax_file, remaining_samples = merging_abundance(taxo_out_dir, category, taxo_dir, samples)
+        if not tax_file:
+            continue
         tax_bining = separate_taxrank(taxo_dir, tax_file)
 
         if os.path.isfile(metafile):  
-            metadata = pd.read_csv(metafile, sep=',', index_col=sampleid).loc[samples, column_name]
+            metadata = pd.read_csv(metafile, sep=meta_sep, index_col=sampleid).loc[remaining_samples, column_name]
         else:
             metadata = 'no_metadata'
-        print(metadata)
 
         for f in os.listdir(tax_bining):
             if f.endswith('.tab'):

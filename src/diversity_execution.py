@@ -50,7 +50,7 @@ def boxplot(ax, df, x_val, y_val, pairs):
     annotator.apply_and_annotate()
 
 
-def compute_alpha_diversity(abundance_file, metafile, sample, column, outdir):
+def compute_alpha_diversity(abundance_file, metafile, meta_sep, sample, column, outdir):
     abun_tab = pd.read_csv(abundance_file, sep='\t')
     abun_tab = abun_tab.drop('clade_name', axis=1)
     abun_tab = abun_tab.T
@@ -78,7 +78,7 @@ def compute_alpha_diversity(abundance_file, metafile, sample, column, outdir):
     df.to_csv(os.path.join(outdir, 'alpha_diversity.tab'), sep='\t')
     #return  
     # Metadata
-    df_metainfo = pd.read_csv(metafile, sep=',').set_index(sample)
+    df_metainfo = pd.read_csv(metafile, sep=meta_sep).set_index(sample)
     df['subject'] = df_metainfo[column]
     print(df_metainfo[column])
     pairs = list(combinations(df['subject'].unique(), 2))
@@ -151,7 +151,7 @@ def confidence_ellipse(x, y, ax, n_std=3.0, facecolor='none', **kwargs):
 
 
 # Compute beta diversity
-def compute_beta_diversity(abundance_file, metafile, sample, column, outdir):
+def compute_beta_diversity(abundance_file, metafile, meta_sep, sample, column, outdir):
     abun_tab = pd.read_csv(abundance_file, sep='\t')
     abun_tab = abun_tab.drop('clade_name', axis=1)
     abun_tab = abun_tab.T
@@ -160,7 +160,7 @@ def compute_beta_diversity(abundance_file, metafile, sample, column, outdir):
     # Bray-Curtis
     beta_diversity = skbio.diversity.beta_diversity("braycurtis", abun_tab, ids)
     # Metadata
-    df_metainfo = pd.read_csv(metafile, sep=',').set_index(sample)
+    df_metainfo = pd.read_csv(metafile, sep=meta_sep).set_index(sample)
     df_metainfo = df_metainfo.loc[ids,:]
     unique_grp = df_metainfo[column].unique()
 
@@ -193,6 +193,7 @@ def run_diversity_execution(process_dir, output_dir):
     tax_lbl_for_diversity = config.read_from_config(config_file, 'Diversity', 'tax_lbl_for_diversity')
     taxofile = '4_family.tab' if tax_lbl_for_diversity == 'f' else '5_genera.tab' if tax_lbl_for_diversity == 'g' else '6_species.tab' 
     metafile = config.read_from_config(config_file, 'Diversity', 'metafile_for_diversity')
+    meta_sep = config.read_from_config(config_file, 'Diversity', 'seperator_for_metafile')
     sample = config.read_from_config(config_file, 'Diversity', 'metafile_sampleid')
     metacol = config.read_from_config(config_file, 'Diversity', 'metafile_category')
     abund = float(config.read_from_config(config_file, 'Diversity', 'abundace_cutoff'))
@@ -210,11 +211,11 @@ def run_diversity_execution(process_dir, output_dir):
         # Alpha diversity
         alpha_dir = os.path.join(diversity_dir, 'alpha_diversity', category)
         util.create_dir(alpha_dir)
-        compute_alpha_diversity(fitered_taxprof, metafile, sample, metacol, alpha_dir)
+        compute_alpha_diversity(fitered_taxprof, metafile, meta_sep, sample, metacol, alpha_dir)
         if os.path.isfile(metafile):
             # Beta diversity
             beta_dir = os.path.join(diversity_dir, 'beta_diversity', category)
             util.create_dir(beta_dir)
-            compute_beta_diversity(fitered_taxprof, metafile, sample, metacol, beta_dir)
+            compute_beta_diversity(fitered_taxprof, metafile, meta_sep, sample, metacol, beta_dir)
         else:
             print('Metafile not found. Diversity not computed')

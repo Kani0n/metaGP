@@ -7,7 +7,7 @@ import configparser
 #------------------------------------------------------------------------------------
 # Actual creation
 #------------------------------------------------------------------------------------
-def create_configfile(input_dir, adapter, hostdb, minlength, headcrop, min_readcount, taxo_db, taxo_idx, abundace, prevalence, metafile, sampleid, metainfo, taxlbl, nt_db, pro_db, bw_db, bowtie_idx):
+def create_configfile(input_dir, adapter, hostdb, minlength, headcrop, min_readcount, taxo_db, taxo_idx, abundace, prevalence, metafile, metafile_sep, sampleid, metainfo, taxlbl, nt_db, pro_db, bw_db, bowtie_idx):
     config = configparser.ConfigParser()
     config['General'] = {
                         'input_dir'    :   input_dir,
@@ -27,6 +27,7 @@ def create_configfile(input_dir, adapter, hostdb, minlength, headcrop, min_readc
                             'abundace_cutoff'           : abundace,
                             'prevalent_cutoff'          : prevalence,
                             'metafile_for_diversity'    : metafile,
+                            'seperator_for_metafile'    : metafile_sep,
                             'metafile_sampleid'         : sampleid,
                             'metafile_category'         : metainfo,
                             'tax_lbl_for_diversity'     : taxlbl
@@ -55,26 +56,19 @@ def make_config(project_dir, input_dir):
     taxo_idx = 'mpa_vOct22_CHOCOPhlAnSGB_202212'
     abundance = 0.2
     prevalence = 30.5
-    metafile = '/mnt/main_hdd/ge52qoh/DATA/BB4387/Stuhlproben_Algenstudie_sequencing_1.csv'
-    samplecol = 'Sample'
-    metacol = 'Treatment'
+    metafile = '/path/to/metafile.csv'
+    metafile_sep = ','
+    samplecol = 'e.g. sampleID'
+    metacol = 'e.g. treatment'
     taxlbl = 'g'
     nt_db = os.path.join(project_dir, 'static/database/bowtie2db/mpa_vOct22_CHOCOPhlAnSGB_202212')
     pro_db = os.path.join(project_dir, 'static/database/protein_db/uniref')
     bw_db = os.path.join(project_dir, 'static/database/bowtie2db')
     bowtie_idx = 'mpa_vOct22_CHOCOPhlAnSGB_202212'
 
-    config = create_configfile(input_dir, adapter, hostdb, minlength, headcrop, min_readcount, taxo_db, taxo_idx, abundance, prevalence, metafile, samplecol, metacol, taxlbl, nt_db, pro_db, bw_db, bowtie_idx)
+    config = create_configfile(input_dir, adapter, hostdb, minlength, headcrop, min_readcount, taxo_db, taxo_idx, abundance, prevalence, metafile, metafile_sep, samplecol, metacol, taxlbl, nt_db, pro_db, bw_db, bowtie_idx)
     
     print_config(config)
-
-    #if not os.path.isdir(dir):
-    #    print('Data directory not found.')
-    #    exit()
-    #
-    #with open(os.path.join(dir, 'out.txt'), 'r')as f:
-    #    for line in f.readlines():
-    #        print(line)
 
 
 #------------------------------------------------------------------------------------

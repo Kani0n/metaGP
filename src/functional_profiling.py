@@ -5,7 +5,6 @@ import multiprocessing as mp
 import os
 
 import util, config
-import functional_profiling_stats as stats
 
 
 def concat_pairs(sample, fwd, rev, output_dir):
