@@ -65,7 +65,7 @@ def compute_alpha_diversity(abundance_file, metafile, meta_sep, sample, column, 
     # Simpson index
     simpson = skbio.diversity.alpha_diversity('simpson', abun_tab, ids).to_list()
     # Simpson effective index
-    simpson_effective = [1./i for i in simpson]
+    simpson_effective = [None if i==0 else 1./i for i in simpson]
     # Simpson_evenness
     simpson_e = skbio.diversity.alpha_diversity('simpson_e', abun_tab, ids).to_list()
     # Gini_index
@@ -181,9 +181,9 @@ def compute_beta_diversity(abundance_file, metafile, meta_sep, sample, column, o
         grp_sample = df_metainfo[df_metainfo[column] == ugrp].index.to_list()
         confidence_ellipse(df_pcoa.loc[grp_sample, "PC1"].to_numpy(), df_pcoa.loc[grp_sample, "PC2"].to_numpy(), ax_nstd, n_std=1, edgecolor='grey')
     # confidence_ellipse(df_pcoa.loc[norecovery,"PC1"].to_numpy(), df_pcoa.loc[norecovery,"PC2"].to_numpy(), ax_nstd, n_std=1,edgecolor='grey')
-    results = anosim(beta_diversity, df_metainfo, column=column, permutations=999)
-    print('ANOSIM p-value: ', results['test statistic'])
-    plt.text(0.3, -.5, 'ANOSIM p-value: ' + str(round(results['test statistic'], 4)), rotation=0, verticalalignment='center', horizontalalignment='center', color='#000000', fontweight='normal', in_layout=True, fontsize=9)
+    #results = anosim(beta_diversity, df_metainfo, column=column, permutations=999)
+    #print('ANOSIM p-value: ', results['test statistic'])
+    plt.text(0.3, -.5, 'ANOSIM p-value', rotation=0, verticalalignment='center', horizontalalignment='center', color='#000000', fontweight='normal', in_layout=True, fontsize=9)
     plt.savefig(os.path.join(outdir, 'pcoa.png'), dpi=200, bbox_inches='tight')
 
 
@@ -199,16 +199,18 @@ def run_diversity_execution(process_dir, output_dir):
     abund = float(config.read_from_config(config_file, 'Diversity', 'abundace_cutoff'))
     preval = float(config.read_from_config(config_file, 'Diversity', 'prevalent_cutoff'))
     
+    diversity_dir = os.path.join(process_dir, 'diversity')
+    util.create_dir(diversity_dir)
     if not os.path.isfile(metafile):
-        util.create_dir(os.path.join(process_dir, 'diversity'))
         print('Metafile not found. Diversity not computed')
         return
 
     for category in ['ignore_usgb', 'usgb']:
         taxprof = os.path.join(output_dir, 'taxo_stats', category, 'Taxonomic_binning', taxofile)
-
+        if not os.path.isfile(taxprof):
+            print(f'No Taxofile found. Skipping: "{category}"')
+            continue
         # Filtering based on abundace and prevalence
-        diversity_dir = os.path.join(process_dir, 'diversity')
         filtered_taxo_dir = os.path.join(diversity_dir, 'filtered_taxprof', category)
         util.create_dir(filtered_taxo_dir)
         fitered_taxprof = os.path.join(filtered_taxo_dir, os.path.basename(taxprof))

@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# default values:
+nCORES="4"
+nPARALLEL="1"
+
 POSITIONAL_ARGS=()
 
 while [[ $# -gt 0 ]]; do

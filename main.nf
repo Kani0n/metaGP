@@ -1,8 +1,6 @@
 #!/usr/bin/env nextflow
 
 
-params.n = 4
-params.np = 8
 def nCores = "${params.n}"
 def nParallel = "${params.np}"
 def input_dir = "${params.i}"
@@ -216,7 +214,8 @@ workflow {
                     make_mapping_file.out
                         .splitCsv(header: ['Num', 'SampleID', 'Forward_read', 'Reverse_read'], sep: '\t', skip: 1)
                         .map{ row -> tuple(row.Num, row.SampleID, row.Forward_read, row.Reverse_read)})
-    quality_control_stats(make_config_file.out, make_mapping_file.out)
+    quality_control_stats(make_config_file.out,
+                          make_mapping_file.out)
     taxonomy_profiling(make_config_file.out,
                        quality_control_stats.out[1]
                         .splitCsv(header: ['Num', 'SampleID', 'Forward_read', 'Reverse_read'], sep: '\t', skip: 1)
@@ -228,6 +227,7 @@ workflow {
     functional_profiling(make_config_file.out,
                          taxonomy_profiling_stats.out,
                          quality_control_stats.out[1])
+    
     functional_profiling_stats(taxonomy_profiling_stats.out,
                                quality_control_stats.out[1])
 }
